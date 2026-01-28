@@ -20,7 +20,7 @@ int str_to_int(const char *string, size_t string_size);
 void print_size(float n);
 
 int filename_decode(char *filename, size_t max_out_len);
-int filename_decrypt(uint8_t *KEY, char *filename, size_t decoded_size);
+int filename_decrypt(const uint8_t *KEY, char *filename, size_t decoded_size);
 void filename_encode_encrypt(const char *old, char *new, size_t new_size);
 int count_char(const char *string, char c);
 

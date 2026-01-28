@@ -8,7 +8,7 @@
 static char *DISCORD_API_BASE_URL = "https://discord.com/api/v9/";
 
 int discord_create_channel(const char *guild_id, const char *name,
-                           struct data *userdata) {
+                           struct response *resp) {
   char *payload =
       "{\"name\": \"%s\", \"type\": 0, \"permission_overwrites\": [{\"id\": "
       "\"%s\", \"type\": 0, \"allow\": \"0\", \"deny\": \"1024\"}]}";
@@ -24,14 +24,14 @@ int discord_create_channel(const char *guild_id, const char *name,
   snprintf(new_url, new_url_size, "%s%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
            guild_id, "channels");
 
-  if (request_post(new_url, new_payload, userdata, 1) != 0)
+  if (request_post(new_url, new_payload, resp, 1) != 0)
     return 1;
 
   return 0;
 };
 
 int discord_rename_channel(const char *channel_id, const char *name,
-                           struct data *userdata) {
+                           struct response *resp) {
 
   char *payload = "{\"name\": \"%s\"}";
   size_t payload_size = (strlen(payload) - 2) + strlen(name) + 1;
@@ -45,13 +45,13 @@ int discord_rename_channel(const char *channel_id, const char *name,
   snprintf(new_url, new_url_size, "%s%s/%s", DISCORD_API_BASE_URL, "channels",
            channel_id);
 
-  if (request_patch(new_url, new_payload, userdata, 1) != 0)
+  if (request_patch(new_url, new_payload, resp, 1) != 0)
     return 1;
 
   return 0;
 }
 
-int discord_delete_channel(const char *channel_id, struct data *userdata) {
+int discord_delete_channel(const char *channel_id, struct response *resp) {
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
                         strlen(channel_id) + 2;
 
@@ -59,7 +59,7 @@ int discord_delete_channel(const char *channel_id, struct data *userdata) {
   snprintf(new_url, new_url_size, "%s%s/%s", DISCORD_API_BASE_URL, "channels",
            channel_id);
 
-  if (request_delete(new_url, userdata, 1) != 0)
+  if (request_delete(new_url, resp, 1) != 0)
     return 1;
 
   return 0;
@@ -80,16 +80,22 @@ json_array *discord_get_channels(const char *guild_id) {
            guild_id, "channels");
 
   json_array *channels = json_array_new();
-  struct data userdata = {.json = NULL};
+  struct response resp = {.json = NULL};
 
-  if (request_get(new_url, &userdata, 1) != 0) {
+  if (request_get(new_url, &resp, 1) != 0) {
     json_array_destroy(channels);
     return NULL;
   }
 
-  json_array *resp = userdata.json;
+  printf("http_code: %d\n", resp.http_code);
+  if (resp.http_code != 200) {
+    json_array_destroy(channels);
+    return NULL;
+  }
+
+  json_array *json = resp.json;
   json_object *o;
-  json_array_for_each(resp, o) {
+  json_array_for_each(json, o) {
     json_string id = json_object_get(o, "id");
     json_string name = json_object_get(o, "name");
     json_number *type = json_object_get(o, "type");
@@ -104,28 +110,8 @@ json_array *discord_get_channels(const char *guild_id) {
     json_array_push(channels, &ch, sizeof(struct channel), JSON_UNKNOWN);
   }
 
-  json_array_destroy(resp);
+  json_array_destroy(json);
   return channels;
-}
-
-int discord_create_webhook(const char *channel_id, const char *name,
-                           struct data *userdata) {
-  char *payload = "{\"name\": \"%s\"}";
-  size_t payload_size = (strlen(payload) - 2) + strlen(name) + 1;
-  char new_payload[payload_size];
-  snprintf(new_payload, payload_size, payload, name);
-
-  size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
-                        strlen(channel_id) + strlen("webhooks") + 3;
-
-  char new_url[new_url_size];
-  snprintf(new_url, new_url_size, "%s%s/%s/%s", DISCORD_API_BASE_URL,
-           "channels", channel_id, "webhooks");
-
-  if (request_post(new_url, new_payload, userdata, 1) != 0)
-    return 1;
-
-  return 0;
 }
 
 void discord_free_messages(json_array *messages) {
@@ -148,7 +134,7 @@ json_array *discord_get_messages(const char *channel_id) {
                     strlen(channel_id) + strlen("messages") + 4;
 
   while (messages_n == -1 || messages_n == 100) {
-    struct data resp = {0};
+    struct response resp = {0};
     size_t new_url_size = url_size;
     if (messages_n == -1) {
       char *params = "limit=100";

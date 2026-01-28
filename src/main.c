@@ -13,12 +13,7 @@
 
 #include <curl/curl.h>
 #include <errno.h>
-#include <getopt.h>
 #include <regex.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <unistd.h>
 
 struct snowflake GUILD_ID;
@@ -44,12 +39,22 @@ void format_time(char *formatted, time_t n) {
   strftime(formatted, 40, " %b %e  %Y", t);
 }
 
-void print_help() {
-  printf("  -h, --help      show this message\n");
-  printf("  -c, --channel   select channel\n");
-  printf("  -g, --guild     select guild\n");
-  printf("  -l, --ls        list guild or specified channel\n");
-}
+int dcfs_mkdir(const char *path, mode_t mode) {
+  if (count_char(path, '/') != 1) {
+    fprintf(stderr, "can't create directory in a directory\n");
+    return -EPERM;
+  }
+
+  struct response resp = {0};
+  discord_create_channel(GUILD_ID.value, path + 1, &resp);
+
+  if (resp.http_code != 200) {
+    fprintf(stderr, "failed to create a new channel\n");
+    return -EAGAIN;
+  }
+
+  return 0;
+};
 
 int dcfs_getattr(const char *path, struct stat *stbuf,
                  struct fuse_file_info *fi) {
@@ -94,7 +99,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     if (!state->channels) {
       state->channels = discord_get_channels(GUILD_ID.value);
       if (!state->channels) {
-        fprintf(stderr, "failed to get channels\n");
+        fprintf(stderr, "failed to get channels of guild %s\n", GUILD_ID.value);
         return -ENOENT;
       }
     }
@@ -201,7 +206,9 @@ int main(int argc, char *argv[]) {
   struct fuse_operations operations = {
       .readdir = dcfs_readdir,
       .getattr = dcfs_getattr,
+      .mkdir = dcfs_mkdir,
       .destroy = dcfs_destroy,
+
   };
 
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);

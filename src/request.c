@@ -10,7 +10,7 @@
 
 static size_t write_cb(void *content, size_t size, size_t nmemb, void *data) {
   size_t realsize = size * nmemb;
-  struct data *mem = data;
+  struct response *mem = data;
   char *ptr = realloc(mem->__raw, mem->size + realsize + 1);
   if (!ptr) {
     printf("not enough memory (realloc returned NULL)\n");
@@ -25,22 +25,22 @@ static size_t write_cb(void *content, size_t size, size_t nmemb, void *data) {
   return realsize;
 }
 
-static void handle_resp(CURLcode code, CURL *curl, struct data *userdata,
+static void handle_resp(CURLcode code, CURL *curl, struct response *resp,
                         const char *request_type) {
   if (code != CURLE_OK) {
     fprintf(stderr, "failed to %s: %s\n", request_type,
             curl_easy_strerror(code));
 
   } else {
-    userdata->json_type = json_load(userdata->__raw, (void **)&userdata->json);
-    free(userdata->__raw);
-    userdata->__raw = NULL;
+    resp->json_type = json_load(resp->__raw, (void **)&resp->json);
+    free(resp->__raw);
+    resp->__raw = NULL;
 
-    if (userdata->json_type == 0) {
+    if (resp->json_type == 0) {
       printf("HTTP ERROR: failed to load json\n");
 
     } else {
-      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &userdata->http_code);
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
     }
   }
 }
@@ -56,7 +56,7 @@ static struct curl_slist *append_auth_header(struct curl_slist *headers) {
   return curl_slist_append(headers, auth_string);
 }
 
-int request_get(const char *url, struct data *userdata, char user_auth) {
+int request_get(const char *url, struct response *resp, char user_auth) {
   CURLcode res;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
@@ -67,7 +67,7 @@ int request_get(const char *url, struct data *userdata, char user_auth) {
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, userdata);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     if (user_auth != 0) {
       struct curl_slist *headers = append_auth_header(NULL);
@@ -75,7 +75,7 @@ int request_get(const char *url, struct data *userdata, char user_auth) {
     }
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, userdata, "GET");
+    handle_resp(res, curl, resp, "GET");
 
     curl_easy_cleanup(curl);
   }
@@ -85,7 +85,7 @@ int request_get(const char *url, struct data *userdata, char user_auth) {
 }
 
 int request_post_file(const char *url, const char *filename, char *buffer,
-                      size_t buffer_size, struct data *userdata) {
+                      size_t buffer_size, struct response *resp) {
   CURLcode res;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
@@ -104,10 +104,10 @@ int request_post_file(const char *url, const char *filename, char *buffer,
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, userdata);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, userdata, "POST");
+    handle_resp(res, curl, resp, "POST");
     curl_easy_cleanup(curl);
   }
 
@@ -115,7 +115,7 @@ int request_post_file(const char *url, const char *filename, char *buffer,
   return 0;
 }
 
-int request_post(const char *url, char *data, struct data *userdata,
+int request_post(const char *url, char *data, struct response *resp,
                  char user_auth) {
   CURLcode res;
   int ret = 0;
@@ -138,10 +138,10 @@ int request_post(const char *url, char *data, struct data *userdata,
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, userdata);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, userdata, "POST");
+    handle_resp(res, curl, resp, "POST");
     curl_easy_cleanup(curl);
   }
 
@@ -149,7 +149,7 @@ int request_post(const char *url, char *data, struct data *userdata,
   return ret;
 }
 
-int request_patch(const char *url, char *data, struct data *userdata,
+int request_patch(const char *url, char *data, struct response *resp,
                   char user_auth) {
   CURLcode res;
   int ret = 0;
@@ -173,10 +173,10 @@ int request_patch(const char *url, char *data, struct data *userdata,
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, userdata);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, userdata, "PATCH");
+    handle_resp(res, curl, resp, "PATCH");
     curl_easy_cleanup(curl);
   }
 
@@ -184,7 +184,7 @@ int request_patch(const char *url, char *data, struct data *userdata,
   return ret;
 }
 
-int request_delete(const char *url, struct data *userdata, char user_auth) {
+int request_delete(const char *url, struct response *resp, char user_auth) {
   CURLcode res;
   int ret = 0;
 
@@ -197,7 +197,7 @@ int request_delete(const char *url, struct data *userdata, char user_auth) {
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, userdata);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     if (user_auth != 0) {
       struct curl_slist *headers = append_auth_header(NULL);
@@ -205,7 +205,7 @@ int request_delete(const char *url, struct data *userdata, char user_auth) {
     }
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, userdata, "DELETE");
+    handle_resp(res, curl, resp, "DELETE");
     curl_easy_cleanup(curl);
   }
 

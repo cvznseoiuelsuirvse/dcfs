@@ -193,7 +193,7 @@ int filename_decode(char *filename, size_t max_out_len) {
   return b64decode(tmp, strlen(tmp), filename, max_out_len);
 }
 
-int filename_decrypt(uint8_t *KEY, char *filename, size_t decoded_size) {
+int filename_decrypt(const uint8_t *KEY, char *filename, size_t decoded_size) {
   unsigned char tmp[512];
   memcpy(tmp, filename, decoded_size);
 

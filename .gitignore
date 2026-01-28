@@ -5,3 +5,4 @@ fuse_examples/
 sshfs/
 mnt/
 .env
+key.h

@@ -56,30 +56,62 @@ int dcfs_mkdir(const char *path, mode_t mode) {
   return 0;
 };
 
+#ifdef __APPLE__
+int dcfs_getattr(const char *path, struct fuse_darwin_attr *stbuf,
+                 struct fuse_file_info *fi)
+#else
 int dcfs_getattr(const char *path, struct stat *stbuf,
-                 struct fuse_file_info *fi) {
+                 struct fuse_file_info *fi)
+#endif
+{
   int res = 0;
   struct fuse_context *ctx = fuse_get_context();
   struct dcfs_state *state = ctx->private_data;
   memset(stbuf, 0, sizeof(struct stat));
+#ifdef __APPLE__
+  stbuf->uid = getuid();
+  stbuf->gid = getgid();
+#else
   stbuf->st_uid = getuid();
   stbuf->st_gid = getgid();
+#endif
 
   if (strcmp(path, "/") == 0) {
+#ifdef __APPLE__
+    stbuf->mode = S_IFDIR | 0755;
+    stbuf->size = 4096;
+#else
     stbuf->st_mode = S_IFDIR | 0755;
     stbuf->st_size = 4096;
+#endif
+
+#ifdef __APPLE__
+    stbuf->ctimespec.tv_sec = GUILD_ID.timestamp;
+    stbuf->ctimespec.tv_sec = GUILD_ID.timestamp;
+#else
     stbuf->st_ctim.tv_sec = GUILD_ID.timestamp;
     stbuf->st_mtim.tv_sec = GUILD_ID.timestamp;
+#endif
 
   } else if (count_char(path, '/') == 1) {
+#ifdef __APPLE__
+    stbuf->mode = S_IFDIR | 0755;
+    stbuf->size = 4096;
+#else
     stbuf->st_mode = S_IFDIR | 0755;
     stbuf->st_size = 4096;
+#endif
     struct channel *channel;
     json_array *_ch = state->channels;
     json_array_for_each(_ch, channel) {
       if (strcmp(path + 1, channel->name) == 0) {
+#ifdef __APPLE__
+        stbuf->ctimespec.tv_sec = channel->id.timestamp;
+        stbuf->ctimespec.tv_sec = channel->id.timestamp;
+#else
         stbuf->st_ctim.tv_sec = channel->id.timestamp;
         stbuf->st_mtim.tv_sec = channel->id.timestamp;
+#endif
         break;
       }
     }
@@ -87,9 +119,18 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
   return res;
 }
 
+#ifdef __APPLE__
+int dcfs_readdir(const char *path, void *buf, fuse_darwin_fill_dir_t filler,
+                 off_t offset, struct fuse_file_info *fi,
+                 enum fuse_readdir_flags flags)
+
+#else
 int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                  off_t offset, struct fuse_file_info *fi,
-                 enum fuse_readdir_flags flags) {
+                 enum fuse_readdir_flags flags)
+#endif
+{
+
   filler(buf, ".", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
   filler(buf, "..", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
   struct fuse_context *ctx = fuse_get_context();

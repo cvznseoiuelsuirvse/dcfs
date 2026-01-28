@@ -4,5 +4,5 @@ CompileFlags:
       - "-Wall"
       - "-Wextra"
       - "-ferror-limit=0"
-      - "-I/media/linux/dev/c/dcfs/lib"
-      - "-I/media/linux/dev/c/dcfs/src"
+      - "-I/Users/convulsiveseizures/dev/c/dcfs/lib"
+      - "-I/Users/convulsiveseizures/dev/c/dcfs/src"

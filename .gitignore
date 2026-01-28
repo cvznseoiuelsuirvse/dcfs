@@ -5,4 +5,5 @@ fuse_examples/
 sshfs/
 mnt/
 .env
+.clangd
 key.h

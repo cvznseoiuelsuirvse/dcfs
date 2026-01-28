@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static char *DISCORD_API_BASE_URL = "https://discord.com/api/v9/";
+static char *DISCORD_API_BASE_URL = "https://discord.com/api/v9";
 
 int discord_create_channel(const char *guild_id, const char *name,
                            struct response *resp) {
@@ -19,9 +19,9 @@ int discord_create_channel(const char *guild_id, const char *name,
   snprintf(new_payload, payload_size, payload, name, guild_id);
 
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("guilds") +
-                        strlen(guild_id) + strlen("channels") + 3;
+                        strlen(guild_id) + strlen("channels") + 4;
   char new_url[new_url_size];
-  snprintf(new_url, new_url_size, "%s%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
+  snprintf(new_url, new_url_size, "%s/%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
            guild_id, "channels");
 
   if (request_post(new_url, new_payload, resp, 1) != 0)
@@ -42,7 +42,7 @@ int discord_rename_channel(const char *channel_id, const char *name,
                         strlen(channel_id) + 2;
 
   char new_url[new_url_size];
-  snprintf(new_url, new_url_size, "%s%s/%s", DISCORD_API_BASE_URL, "channels",
+  snprintf(new_url, new_url_size, "%s/%s/%s", DISCORD_API_BASE_URL, "channels",
            channel_id);
 
   if (request_patch(new_url, new_payload, resp, 1) != 0)
@@ -56,7 +56,7 @@ int discord_delete_channel(const char *channel_id, struct response *resp) {
                         strlen(channel_id) + 2;
 
   char new_url[new_url_size];
-  snprintf(new_url, new_url_size, "%s%s/%s", DISCORD_API_BASE_URL, "channels",
+  snprintf(new_url, new_url_size, "%s/%s/%s", DISCORD_API_BASE_URL, "channels",
            channel_id);
 
   if (request_delete(new_url, resp, 1) != 0)
@@ -74,9 +74,9 @@ void discord_free_channels(json_array *channels) {
 
 json_array *discord_get_channels(const char *guild_id) {
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("guilds") +
-                        strlen(guild_id) + strlen("channels") + 3;
+                        strlen(guild_id) + strlen("channels") + 4;
   char new_url[new_url_size];
-  snprintf(new_url, new_url_size, "%s%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
+  snprintf(new_url, new_url_size, "%s/%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
            guild_id, "channels");
 
   json_array *channels = json_array_new();
@@ -87,7 +87,6 @@ json_array *discord_get_channels(const char *guild_id) {
     return NULL;
   }
 
-  printf("http_code: %d\n", resp.http_code);
   if (resp.http_code != 200) {
     json_array_destroy(channels);
     return NULL;
@@ -131,7 +130,7 @@ json_array *discord_get_messages(const char *channel_id) {
 
   int messages_n = -1;
   size_t url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
-                    strlen(channel_id) + strlen("messages") + 4;
+                    strlen(channel_id) + strlen("messages") + 5;
 
   while (messages_n == -1 || messages_n == 100) {
     struct response resp = {0};
@@ -141,7 +140,7 @@ json_array *discord_get_messages(const char *channel_id) {
       new_url_size += strlen(params);
 
       char new_url[url_size + strlen(params)];
-      snprintf(new_url, new_url_size, "%s%s/%s/%s?%s", DISCORD_API_BASE_URL,
+      snprintf(new_url, new_url_size, "%s/%s/%s/%s?%s", DISCORD_API_BASE_URL,
                "channels", channel_id, "messages", params);
 
       request_get(new_url, &resp, 1);
@@ -217,4 +216,16 @@ json_array *discord_get_messages(const char *channel_id) {
   }
 
   return messages;
+}
+
+int discord_send_file(const char *channel_id, const char *filename,
+                      char *buffer, size_t size, struct response *resp) {
+  size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
+                        strlen(channel_id) + strlen("messages") + 4;
+  char new_url[new_url_size];
+  snprintf(new_url, new_url_size, "%s/%s/%s/%s", DISCORD_API_BASE_URL,
+           "channels", channel_id, "messages");
+
+  request_post_file(new_url, filename, buffer, size, resp);
+  return 0;
 }

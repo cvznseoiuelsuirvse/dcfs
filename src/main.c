@@ -4,6 +4,7 @@
 #include "util.h"
 
 #if __APPLE__
+#include <sys/xattr.h>
 #define _FILE_OFFSET_BITS 64
 #endif
 
@@ -33,10 +34,32 @@ enum flags {
 struct dcfs_state {
   json_array *messages;
   json_array *channels;
+  const char *current_channel;
 };
-void format_time(char *formatted, time_t n) {
-  struct tm *t = localtime(&n);
-  strftime(formatted, 40, " %b %e  %Y", t);
+
+int dcfs_rmdir(const char *path) {
+  if (count_char(path, '/') != 1) {
+    return -EPERM;
+  }
+  struct fuse_context *ctx = fuse_get_context();
+  struct dcfs_state *state = ctx->private_data;
+
+  struct channel *channel;
+  json_array *_ch = state->channels;
+  json_array_for_each(_ch, channel) {
+    if (strcmp(path + 1, channel->name) == 0) {
+      struct response resp = {0};
+      discord_delete_channel(channel->id.value, &resp);
+
+      if (resp.http_code != 201) {
+        fprintf(stderr, "failed to delete %s channel. http code: %d\n",
+                channel->name, resp.http_code);
+        return -EAGAIN;
+      }
+      return 0;
+    }
+  }
+  return -ENOENT;
 }
 
 int dcfs_mkdir(const char *path, mode_t mode) {
@@ -45,16 +68,44 @@ int dcfs_mkdir(const char *path, mode_t mode) {
     return -EPERM;
   }
 
+  struct fuse_context *ctx = fuse_get_context();
+  struct dcfs_state *state = ctx->private_data;
+
   struct response resp = {0};
   discord_create_channel(GUILD_ID.value, path + 1, &resp);
 
-  if (resp.http_code != 200) {
-    fprintf(stderr, "failed to create a new channel\n");
+  if (resp.http_code != 201) {
+    fprintf(stderr, "failed to create a new channel. http_code: %d\n",
+            resp.http_code);
     return -EAGAIN;
   }
 
+  json_object *json = resp.json;
+
+  json_string id = json_object_get(json, "id");
+  json_string name = json_object_get(json, "name");
+  json_number *type = json_object_get(json, "type");
+  json_word *parent = json_object_get(json, "parent_id");
+  struct channel new_channel = {
+      .type = *type,
+      .has_parent = *parent == JSON_NULL ? 0 : 1,
+      .name = strdup(name),
+  };
+  snowflake_init(id, &new_channel.id);
+
+  json_array_push(state->channels, &new_channel, sizeof(struct channel),
+                  JSON_UNKNOWN);
+  json_object_destroy(json);
+
   return 0;
 };
+
+#ifdef __APPLE__
+int dcfs_getxattr(const char *path, const char *name, char *value, size_t size,
+                  uint32_t flags) {
+  return -ENOTSUP;
+}
+#endif
 
 #ifdef __APPLE__
 int dcfs_getattr(const char *path, struct fuse_darwin_attr *stbuf,
@@ -87,35 +138,35 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
 
 #ifdef __APPLE__
     stbuf->ctimespec.tv_sec = GUILD_ID.timestamp;
-    stbuf->ctimespec.tv_sec = GUILD_ID.timestamp;
+    stbuf->mtimespec.tv_sec = GUILD_ID.timestamp;
 #else
     stbuf->st_ctim.tv_sec = GUILD_ID.timestamp;
     stbuf->st_mtim.tv_sec = GUILD_ID.timestamp;
 #endif
 
   } else if (count_char(path, '/') == 1) {
-#ifdef __APPLE__
-    stbuf->mode = S_IFDIR | 0755;
-    stbuf->size = 4096;
-#else
-    stbuf->st_mode = S_IFDIR | 0755;
-    stbuf->st_size = 4096;
-#endif
+
     struct channel *channel;
     json_array *_ch = state->channels;
     json_array_for_each(_ch, channel) {
       if (strcmp(path + 1, channel->name) == 0) {
 #ifdef __APPLE__
+        stbuf->mode = S_IFDIR | 0755;
+        stbuf->size = 0;
         stbuf->ctimespec.tv_sec = channel->id.timestamp;
-        stbuf->ctimespec.tv_sec = channel->id.timestamp;
+        stbuf->mtimespec.tv_sec = channel->id.timestamp;
 #else
+        stbuf->st_mode = S_IFDIR | 0755;
+        stbuf->st_size = 0;
         stbuf->st_ctim.tv_sec = channel->id.timestamp;
         stbuf->st_mtim.tv_sec = channel->id.timestamp;
 #endif
-        break;
+        return res;
       }
     }
+    res = -ENOENT;
   }
+
   return res;
 }
 
@@ -149,9 +200,14 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     json_array *_c = state->channels;
     json_array_for_each(_c, channel) {
       if (channel->type == GUILD_TEXT && !channel->has_parent) {
+#ifdef __APPLE__
+        struct fuse_darwin_attr st;
+        st.mode = S_IFDIR;
+#else
         struct stat st;
         st.st_mode = S_IFDIR;
-        filler(buf, channel->name, NULL, 0, FUSE_FILL_DIR_DEFAULTS);
+#endif
+        filler(buf, channel->name, &st, 0, FUSE_FILL_DIR_DEFAULTS);
       }
     }
   }
@@ -247,7 +303,11 @@ int main(int argc, char *argv[]) {
   struct fuse_operations operations = {
       .readdir = dcfs_readdir,
       .getattr = dcfs_getattr,
+#ifdef __APPLE__
+      .getxattr = dcfs_getxattr,
+#endif
       .mkdir = dcfs_mkdir,
+      .rmdir = dcfs_rmdir,
       .destroy = dcfs_destroy,
 
   };

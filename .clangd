@@ -1,8 +1,0 @@
-CompileFlags:
-  Add: 
-      - "-xc"
-      - "-Wall"
-      - "-Wextra"
-      - "-ferror-limit=0"
-      - "-I/Users/convulsiveseizures/dev/c/dcfs/lib"
-      - "-I/Users/convulsiveseizures/dev/c/dcfs/src"

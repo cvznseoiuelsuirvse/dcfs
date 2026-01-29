@@ -221,3 +221,11 @@ int count_char(const char *string, char c) {
   }
   return n;
 }
+
+int last_index(const char *string, char c) {
+  int idx = -1;
+  for (size_t i = 0; i < strlen(string); i++)
+    if (string[i] == c)
+      idx = i;
+  return idx;
+}

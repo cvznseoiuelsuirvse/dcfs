@@ -19,7 +19,7 @@ int discord_create_channel(const char *guild_id, const char *name,
   snprintf(new_payload, payload_size, payload, name, guild_id);
 
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("guilds") +
-                        strlen(guild_id) + strlen("channels") + 4;
+                        strlen(guild_id) + strlen("channels") + 5;
   char new_url[new_url_size];
   snprintf(new_url, new_url_size, "%s/%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
            guild_id, "channels");
@@ -39,7 +39,7 @@ int discord_rename_channel(const char *channel_id, const char *name,
   snprintf(new_payload, payload_size, payload, name);
 
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
-                        strlen(channel_id) + 2;
+                        strlen(channel_id) + 3;
 
   char new_url[new_url_size];
   snprintf(new_url, new_url_size, "%s/%s/%s", DISCORD_API_BASE_URL, "channels",
@@ -53,28 +53,31 @@ int discord_rename_channel(const char *channel_id, const char *name,
 
 int discord_delete_channel(const char *channel_id, struct response *resp) {
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
-                        strlen(channel_id) + 2;
+                        strlen(channel_id) + 3;
 
   char new_url[new_url_size];
   snprintf(new_url, new_url_size, "%s/%s/%s", DISCORD_API_BASE_URL, "channels",
            channel_id);
 
+  printf("%s\n", new_url);
   if (request_delete(new_url, resp, 1) != 0)
     return 1;
 
   return 0;
 }
 
+void discord_free_channel(struct channel *channel) { free(channel->name); }
+
 void discord_free_channels(json_array *channels) {
   struct channel *channel;
   json_array *_c = channels;
-  json_array_for_each(_c, channel) { free(channel->name); }
+  json_array_for_each(_c, channel) { discord_free_channel(channel); }
   json_array_destroy(channels);
 }
 
 json_array *discord_get_channels(const char *guild_id) {
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("guilds") +
-                        strlen(guild_id) + strlen("channels") + 4;
+                        strlen(guild_id) + strlen("channels") + 5;
   char new_url[new_url_size];
   snprintf(new_url, new_url_size, "%s/%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
            guild_id, "channels");
@@ -113,15 +116,16 @@ json_array *discord_get_channels(const char *guild_id) {
   return channels;
 }
 
+void discord_free_message(struct message *message) {
+  free(message->attachment.filename);
+  free(message->attachment.url);
+  if (message->parts)
+    free(message->parts);
+}
 void discord_free_messages(json_array *messages) {
   struct message *message;
   json_array *_m = messages;
-  json_array_for_each(_m, message) {
-    free(message->attachment.filename);
-    free(message->attachment.url);
-    if (message->parts)
-      free(message->parts);
-  }
+  json_array_for_each(_m, message) { discord_free_message(message); }
   json_array_destroy(messages);
 }
 
@@ -130,7 +134,7 @@ json_array *discord_get_messages(const char *channel_id) {
 
   int messages_n = -1;
   size_t url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
-                    strlen(channel_id) + strlen("messages") + 5;
+                    strlen(channel_id) + strlen("messages") + 6;
 
   while (messages_n == -1 || messages_n == 100) {
     struct response resp = {0};
@@ -170,7 +174,7 @@ json_array *discord_get_messages(const char *channel_id) {
       new_url_size += strlen(params);
 
       char new_url[url_size + strlen(params)];
-      snprintf(new_url, new_url_size, "%s%s/%s/%s?%s", DISCORD_API_BASE_URL,
+      snprintf(new_url, new_url_size, "%s/%s/%s/%s?%s", DISCORD_API_BASE_URL,
                "channels", channel_id, "messages", params);
 
       request_get(new_url, &resp, 1);
@@ -221,7 +225,7 @@ json_array *discord_get_messages(const char *channel_id) {
 int discord_send_file(const char *channel_id, const char *filename,
                       char *buffer, size_t size, struct response *resp) {
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
-                        strlen(channel_id) + strlen("messages") + 4;
+                        strlen(channel_id) + strlen("messages") + 5;
   char new_url[new_url_size];
   snprintf(new_url, new_url_size, "%s/%s/%s/%s", DISCORD_API_BASE_URL,
            "channels", channel_id, "messages");

@@ -14,6 +14,7 @@ json_array *discord_get_channels(const char *guild_id);
 void discord_free_channels(json_array *channels);
 
 json_array *discord_get_messages(const char *channel_id);
+
 void discord_free_messages(json_array *messages);
 
 #endif

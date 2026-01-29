@@ -11,38 +11,18 @@
 static size_t write_cb(void *content, size_t size, size_t nmemb, void *data) {
   size_t realsize = size * nmemb;
   struct response *mem = data;
-  char *ptr = realloc(mem->__raw, mem->size + realsize + 1);
+  char *ptr = realloc(mem->raw, mem->size + realsize + 1);
   if (!ptr) {
     printf("not enough memory (realloc returned NULL)\n");
     return 0;
   }
 
-  mem->__raw = ptr;
-  memcpy(&(mem->__raw[mem->size]), content, realsize);
+  mem->raw = ptr;
+  memcpy(&(mem->raw[mem->size]), content, realsize);
   mem->size += realsize;
-  mem->__raw[mem->size] = 0;
+  mem->raw[mem->size] = 0;
 
   return realsize;
-}
-
-static void handle_resp(CURLcode code, CURL *curl, struct response *resp,
-                        const char *request_type) {
-  if (code != CURLE_OK) {
-    fprintf(stderr, "failed to %s: %s\n", request_type,
-            curl_easy_strerror(code));
-
-  } else {
-    resp->json_type = json_load(resp->__raw, (void **)&resp->json);
-    free(resp->__raw);
-    resp->__raw = NULL;
-
-    if (resp->json_type == 0) {
-      printf("HTTP ERROR: failed to load json\n");
-
-    } else {
-      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
-    }
-  }
 }
 
 static struct curl_slist *append_auth_header(struct curl_slist *headers) {
@@ -75,13 +55,18 @@ int request_get(const char *url, struct response *resp, char user_auth) {
     }
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, resp, "GET");
+    if (res != CURLE_OK) {
+      fprintf(stderr, "failed to GET: %s\n", curl_easy_strerror(res));
+
+    } else {
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
+    }
 
     curl_easy_cleanup(curl);
   }
 
   curl_global_cleanup();
-  return 0;
+  return res;
 }
 
 int request_post_file(const char *url, const char *filename, char *buffer,
@@ -107,18 +92,22 @@ int request_post_file(const char *url, const char *filename, char *buffer,
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, resp, "POST");
+    if (res != CURLE_OK) {
+      fprintf(stderr, "failed to POST FILE: %s\n", curl_easy_strerror(res));
+
+    } else {
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
+    }
     curl_easy_cleanup(curl);
   }
 
   curl_global_cleanup();
-  return 0;
+  return res;
 }
 
 int request_post(const char *url, char *data, struct response *resp,
                  char user_auth) {
   CURLcode res;
-  int ret = 0;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
   if (res)
@@ -141,18 +130,22 @@ int request_post(const char *url, char *data, struct response *resp,
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, resp, "POST");
+    if (res != CURLE_OK) {
+      fprintf(stderr, "failed to POST: %s\n", curl_easy_strerror(res));
+
+    } else {
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
+    }
     curl_easy_cleanup(curl);
   }
 
   curl_global_cleanup();
-  return ret;
+  return res;
 }
 
 int request_patch(const char *url, char *data, struct response *resp,
                   char user_auth) {
   CURLcode res;
-  int ret = 0;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
   if (res)
@@ -176,17 +169,21 @@ int request_patch(const char *url, char *data, struct response *resp,
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, resp, "PATCH");
+    if (res != CURLE_OK) {
+      fprintf(stderr, "failed to PATCH: %s\n", curl_easy_strerror(res));
+
+    } else {
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
+    }
     curl_easy_cleanup(curl);
   }
 
   curl_global_cleanup();
-  return ret;
+  return res;
 }
 
 int request_delete(const char *url, struct response *resp, char user_auth) {
   CURLcode res;
-  int ret = 0;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
   if (res)
@@ -205,10 +202,15 @@ int request_delete(const char *url, struct response *resp, char user_auth) {
     }
 
     res = curl_easy_perform(curl);
-    handle_resp(res, curl, resp, "DELETE");
+    if (res != CURLE_OK) {
+      fprintf(stderr, "failed to DELETE: %s\n", curl_easy_strerror(res));
+
+    } else {
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
+    }
     curl_easy_cleanup(curl);
   }
 
   curl_global_cleanup();
-  return ret;
+  return res;
 }

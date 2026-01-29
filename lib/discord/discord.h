@@ -1,6 +1,8 @@
 #ifndef DCFS_DISCORD_H
 #define DCFS_DISCORD_H
 
+#include "json/json.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +41,8 @@ struct part {
 struct message {
   struct snowflake id;
   struct attachment attachment;
+  char *content;
+  size_t content_size;
   size_t parts_n;
   struct part *parts;
   int is_part;
@@ -66,5 +70,11 @@ struct channel {
   enum channel_types type;
   char has_parent;
 };
+
+void discord_free_channels(json_array *channels);
+json_array *discord_get_channels(const char *guild_id);
+
+void discord_free_messages(json_array *messages);
+json_array *discord_get_messages(const char *channel_id);
 
 #endif

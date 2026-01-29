@@ -15,7 +15,11 @@ struct repl_t {
 void print_buffer(char *buffer, size_t buffer_len) {
   for (size_t i = 0; i < buffer_len; i++) {
     uint8_t c = buffer[i];
-    printf("%02x", c);
+    if (c < 32 || c > 126) {
+      printf("%02x ", c);
+    } else {
+      printf("%c ", c);
+    }
   }
   printf("\n");
 }
@@ -92,44 +96,6 @@ int handleErrors(void) {
   return -1;
 }
 
-int aes_encrypt() { return 0; };
-int aes_decrypt(unsigned char *ciphertext, int ciphertext_len,
-                unsigned char *key, unsigned char *plaintext) {
-
-  EVP_CIPHER_CTX *ctx;
-  int len;
-  int plaintext_len;
-
-  int cipher_len = ciphertext_len - 16;
-  unsigned char iv[16];
-  unsigned char cipher[cipher_len];
-
-  memcpy(iv, ciphertext, 16);
-  memcpy(cipher, ciphertext + 16, cipher_len);
-
-  if (!(ctx = EVP_CIPHER_CTX_new()))
-    return handleErrors();
-
-  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
-    return handleErrors();
-
-  if (1 != EVP_DecryptUpdate(ctx, plaintext, &len, cipher, cipher_len))
-    return handleErrors();
-  plaintext_len = len;
-
-  if (1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len))
-    return handleErrors();
-  plaintext_len += len;
-
-  EVP_CIPHER_CTX_free(ctx);
-
-  return plaintext_len;
-};
-
-int b64encode(const char *input, int input_len, char *output, int max_out_len) {
-  return 0;
-};
-
 int b64decode(const char *input, int input_len, char *output, int max_out_len) {
   BIO *b64 = BIO_new(BIO_f_base64());
   BIO *mem = BIO_new_mem_buf(input, input_len);
@@ -174,44 +140,6 @@ void print_size(float n) {
     n /= 1024;
   }
 }
-
-int filename_decode(char *filename, size_t max_out_len) {
-  struct repl_t replacement[] = {
-      {"e-e", "="},       {"-_equal_-", "="}, {"s-s", "/"},
-      {"-_slash_-", "/"}, {"p-p", "+"},       {"-_plus_-", "+"},
-  };
-
-  char tmp[max_out_len];
-  strcpy(tmp, filename);
-
-  for (size_t i = 0; i < sizeof(replacement) / sizeof(struct repl_t); i++) {
-    struct repl_t r = replacement[i];
-    str_replace(filename, tmp, sizeof(tmp), r.old, r.new);
-    strcpy(filename, tmp);
-  }
-
-  return b64decode(tmp, strlen(tmp), filename, max_out_len);
-}
-
-int filename_decrypt(const uint8_t *KEY, char *filename, size_t decoded_size) {
-  unsigned char tmp[512];
-  memcpy(tmp, filename, decoded_size);
-
-  int decrypted_size =
-      aes_decrypt(tmp, decoded_size, KEY, (unsigned char *)filename);
-
-  if (decrypted_size != -1) {
-    filename[decrypted_size] = 0;
-  }
-
-  return decrypted_size;
-};
-
-void filename_encode_encrypt(const char *old, char *new, size_t new_size) {
-  str_replace(old, new, new_size, "=", "e-e");
-  str_replace(old, new, new_size, "/", "s-s");
-  str_replace(old, new, new_size, "+", "p-p");
-};
 
 int count_char(const char *string, char c) {
   int n = 0;

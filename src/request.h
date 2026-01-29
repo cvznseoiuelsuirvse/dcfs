@@ -1,15 +1,12 @@
 #ifndef REQUEST_H
 #define REQUEST_H
 
-#include "json/json.h"
+#include <stdio.h>
 
 struct response {
-  void *json;
-  json_value_type json_type;
+  char *raw;
   size_t size;
   int http_code;
-  const char *http_error_message;
-  char *__raw;
 };
 
 int request_get(const char *url, struct response *resp, char user_auth);

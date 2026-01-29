@@ -1,4 +1,3 @@
-#include "../key.h"
 #include "discord/api.h"
 #include "discord/discord.h"
 #include "util.h"
@@ -15,7 +14,10 @@
 #include <curl/curl.h>
 #include <errno.h>
 #include <regex.h>
+#include <stdarg.h>
 #include <unistd.h>
+
+#define FILENAME path + (last_index(path, '/') + 1)
 
 struct snowflake GUILD_ID;
 
@@ -23,6 +25,26 @@ struct {
   regex_t comp;
   regmatch_t matches[3];
 } part_regex;
+
+void print_err(const char *format, ...) {
+  va_list list;
+  va_start(list, format);
+
+  printf("\033[31;1mERROR\033[0m ");
+  vprintf(format, list);
+
+  va_end(list);
+}
+
+void print_inf(const char *format, ...) {
+  va_list list;
+  va_start(list, format);
+
+  printf("\033[34;1mINFO\033[0m ");
+  vprintf(format, list);
+
+  va_end(list);
+}
 
 json_array *get_messages(const char *channel_id) {
   regcomp(&part_regex.comp, "(.+)\\.PART([0-9]+)", REG_EXTENDED);
@@ -137,7 +159,8 @@ int dcfs_mkdir(const char *path, mode_t mode) {
     return -EAGAIN;
   }
 
-  json_object *json = resp.json;
+  json_object *json;
+  json_load(resp.raw, (void **)&json);
 
   json_string id = json_object_get(json, "id");
   json_string name = json_object_get(json, "name");
@@ -157,12 +180,35 @@ int dcfs_mkdir(const char *path, mode_t mode) {
   return 0;
 };
 
-#ifdef HAS_SETXATTR
+#ifdef HAVE_SETXATTR
+
 int dcfs_getxattr(const char *path, const char *name, char *value, size_t size,
                   uint32_t flags) {
-  return -ENOTSUP;
+  int res = getxattr(path, name, value, size, 0, flags);
+  if (res == -1)
+    return -errno;
+  return res;
 }
-#endif
+
+#ifdef __APPLE__
+int dcfs_setxattr(const char *path, const char *name, const char *value,
+                  size_t size, int flags, uint32_t position) {
+  int res = setxattr(path, name, value, size, position, flags);
+  if (res == -1)
+    return -errno;
+  return res;
+}
+#else
+int dcfs_setxattr(const char *path, const char *name, const char *value,
+                  size_t size, int flags) {
+  int res = setxattr(path, name, value, size, flags);
+  if (res == -1)
+    return -errno;
+  return res;
+}
+#endif /* __APPLE__ */
+
+#endif /* HAVE_SETXATTR */
 
 #ifdef __APPLE__
 int dcfs_getattr(const char *path, struct fuse_darwin_attr *stbuf,
@@ -182,7 +228,7 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
 #else
   stbuf->st_uid = getuid();
   stbuf->st_gid = getgid();
-#endif
+#endif /* __APPLE__ */
 
   if (strcmp(path, "/") == 0) {
 #ifdef __APPLE__
@@ -191,7 +237,7 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
 #else
     stbuf->st_mode = S_IFDIR | 0755;
     stbuf->st_size = 4096;
-#endif
+#endif /* __APPLE__ */
 
 #ifdef __APPLE__
     stbuf->ctimespec.tv_sec = GUILD_ID.timestamp;
@@ -199,7 +245,8 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
 #else
     stbuf->st_ctim.tv_sec = GUILD_ID.timestamp;
     stbuf->st_mtim.tv_sec = GUILD_ID.timestamp;
-#endif
+#endif /* __APPLE__ */
+
     return 0;
 
   } else if (count_char(path, '/') == 1) {
@@ -218,14 +265,13 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
         stbuf->st_size = 0;
         stbuf->st_ctim.tv_sec = channel->id.timestamp;
         stbuf->st_mtim.tv_sec = channel->id.timestamp;
-#endif
+#endif /* __APPLE__ */
         return res;
       }
     }
     res = -ENOENT;
   } else if (count_char(path, '/') == 2) {
-    stbuf->st_mode = S_IFREG | 0644;
-    const char *filename = path + (last_index(path, '/') + 1);
+    const char *filename = FILENAME;
 
     struct message *message;
     json_array *_m = state->messages;
@@ -241,8 +287,8 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
         stbuf->st_size = message->attachment.size;
         stbuf->st_ctim.tv_sec = message->id.timestamp;
         stbuf->st_mtim.tv_sec = message->id.timestamp;
+#endif /* __APPLE__ */
         return res;
-#endif
       }
     }
     res = -ENOENT;
@@ -260,7 +306,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_darwin_fill_dir_t filler,
 int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                  off_t offset, struct fuse_file_info *fi,
                  enum fuse_readdir_flags flags)
-#endif
+#endif /* __APPLE__ */
 {
 
   filler(buf, ".", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
@@ -272,7 +318,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     if (!state->channels) {
       state->channels = discord_get_channels(GUILD_ID.value);
       if (!state->channels) {
-        fprintf(stderr, "failed to get channels of guild %s\n", GUILD_ID.value);
+        print_err("failed to get channels of guild %s\n", GUILD_ID.value);
         return -ENOENT;
       }
     }
@@ -287,7 +333,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 #else
         struct stat st;
         st.st_mode = S_IFDIR;
-#endif
+#endif /* __APPLE__ */
         filler(buf, channel->name, &st, 0, FUSE_FILL_DIR_DEFAULTS);
       }
     }
@@ -319,7 +365,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 #else
         struct stat st;
         st.st_mode = S_IFREG;
-#endif
+#endif /* __APPLE__ */
         filler(buf, message->attachment.filename, &st, 0,
                FUSE_FILL_DIR_DEFAULTS);
       }
@@ -330,30 +376,96 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 }
 
 int dcfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
-  int res;
-  res = open(path, fi->flags, mode);
-  // if (res == -1)
-  //   return -ENOENT;
-  //
-  // fi->fh = res;
-  return -ENOENT;
-}
+  struct fuse_context *ctx = fuse_get_context();
+  struct dcfs_state *state = ctx->private_data;
 
-int dcfs_open(const char *path, struct fuse_file_info *fi) {
-  int res;
+  const char *filename = FILENAME;
+  struct message message;
 
-  res = open(path, fi->flags);
-  if (res == -1)
-    return -errno;
+  message.attachment.filename = strdup(filename);
+  message.attachment.size = 0;
+  message.attachment.url = NULL;
 
-  fi->fh = res;
+  message.is_part = 0;
+  message.parts = NULL;
+  message.parts_n = 0;
+
+  json_array_push(state->messages, &message, sizeof(struct message),
+                  JSON_UNKNOWN);
+
   return 0;
 }
 
+int dcfs_open(const char *path, struct fuse_file_info *fi) { return 0; }
+
 int dcfs_read(const char *path, char *buf, size_t size, off_t offset,
-              struct fuse_file_info *fi) {}
-int dcfs_write(const char *path, const char *buf, size_t size, off_t offset,
-               struct fuse_file_info *fi) {}
+              struct fuse_file_info *fi) {
+  struct fuse_context *ctx = fuse_get_context();
+  struct dcfs_state *state = ctx->private_data;
+
+  if (!state->messages)
+    return -ENODATA;
+
+  const char *filename = FILENAME;
+  struct message *message;
+  json_array *_m = state->messages;
+  print_inf("reading data from %s. offset: %d size: %d\n", filename, offset,
+            size);
+  json_array_for_each(_m, message) {
+    if (strcmp(message->attachment.filename, filename) == 0) {
+      if (!message->content) {
+        struct response resp = {0};
+        request_get(message->attachment.url, &resp, 0);
+        message->content = resp.raw;
+        message->content_size = resp.size;
+      }
+
+      if (offset < message->content_size) {
+        if (offset + size > message->content_size) {
+          size = message->content_size - offset;
+        }
+
+        memcpy(buf, message->content + offset, size);
+
+      } else {
+        size = 0;
+      }
+
+      return size;
+    }
+  }
+  return -1;
+}
+
+int dcfs_release(const char *path, struct fuse_file_info *fi) {
+  struct fuse_context *ctx = fuse_get_context();
+  struct dcfs_state *state = ctx->private_data;
+  const char *filename = FILENAME;
+
+  struct message *message;
+  json_array *_m = state->messages;
+  print_inf("releasing %s\n", filename);
+  json_array_for_each(_m, message) {
+    if (strcmp(message->attachment.filename, filename) == 0) {
+      if (message->content) {
+        free(message->content);
+        message->content = NULL;
+        message->content_size = 0;
+      }
+    }
+  }
+  return 0;
+}
+int dcfs_unlink(const char *path) {
+  struct fuse_context *ctx = fuse_get_context();
+  struct dcfs_state *state = ctx->private_data;
+  const char *filename = FILENAME;
+
+  print_inf("trying to remove %s\n", filename);
+  discord_
+
+      return 0;
+}
 
 void dcfs_destroy(void *data) {
   struct dcfs_state *state = data;
@@ -369,15 +481,17 @@ int main(int argc, char *argv[]) {
   struct fuse_operations operations = {
       .readdir = dcfs_readdir,
       .getattr = dcfs_getattr,
-#ifdef HAS_SETXATTR
+#ifdef HAVE_SETXATTR
       .getxattr = dcfs_getxattr,
-#endif
+      .setxattr = dcfs_setxattr,
+#endif /* HAVE_SETXATTR */
       .mkdir = dcfs_mkdir,
       .rmdir = dcfs_rmdir,
-      .create = dcfs_create,
+      .unlink = dcfs_unlink,
+      // .create = dcfs_create,
       .open = dcfs_open,
       .read = dcfs_read,
-      .write = dcfs_write,
+      .release = dcfs_release,
       .destroy = dcfs_destroy,
 
   };

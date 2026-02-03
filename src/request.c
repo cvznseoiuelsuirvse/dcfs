@@ -81,6 +81,9 @@ int request_post_file(const char *url, const char *filename, char *buffer,
   if (curl) {
     curl_mime *form = curl_mime_init(curl);
 
+    struct curl_slist *headers = NULL;
+    headers = append_auth_header(headers);
+
     curl_mimepart *part = curl_mime_addpart(form);
     curl_mime_data(part, buffer, buffer_size);
     curl_mime_filename(part, filename);
@@ -90,6 +93,7 @@ int request_post_file(const char *url, const char *filename, char *buffer,
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {

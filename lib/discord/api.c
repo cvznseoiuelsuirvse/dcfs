@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-void discord_create_channel(const char *guild_id, const char *name,
-                            struct response *resp) {
+int discord_create_channel(const char *guild_id, const char *name,
+                           struct response *resp) {
   int res = 0;
   char *payload =
       "{\"name\": \"%s\", \"type\": 0, \"permission_overwrites\": [{\"id\": "
@@ -25,7 +25,7 @@ void discord_create_channel(const char *guild_id, const char *name,
   if (request_post(new_url, new_payload, resp, 1) != 0)
     res = 1;
 
-  free(resp->raw);
+  return res;
 };
 
 int discord_rename_channel(const char *channel_id, const char *name,
@@ -85,6 +85,7 @@ int discord_create_message(const char *channel_id, const char *filename,
 
 int discord_delete_messsage(const char *channel_id, const char *message_id,
                             struct response *resp) {
+  int res = 0;
   size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("channels") +
                         strlen(channel_id) + strlen("messages") +
                         strlen(message_id) + 6;
@@ -92,6 +93,9 @@ int discord_delete_messsage(const char *channel_id, const char *message_id,
   snprintf(new_url, new_url_size, "%s/%s/%s/%s/%s", DISCORD_API_BASE_URL,
            "channels", channel_id, "messages", message_id);
 
-  request_delete(new_url, resp, 1);
-  return 0;
+  if (request_delete(new_url, resp, 1) != 0)
+    res = 1;
+
+  free(resp->raw);
+  return res;
 }

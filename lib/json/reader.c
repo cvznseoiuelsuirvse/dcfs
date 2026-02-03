@@ -256,7 +256,8 @@ json_value_type json_load(const char *blob, void **object) {
   if (blob[0] == '{') {
     *object = json_parse_object(blob, &offset);
     return JSON_OBJECT;
-  } else {
+
+  } else if (blob[0] == '[') {
     *object = json_parse_array(blob, &offset);
     return JSON_ARRAY;
   }

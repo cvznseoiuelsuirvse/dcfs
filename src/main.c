@@ -18,7 +18,10 @@
 #include <unistd.h>
 
 #define FILENAME (path) + (last_index((path), '/') + 1)
+
+#ifndef MAX_FILESIZE
 #define MAX_FILESIZE 8388608
+#endif
 
 struct snowflake GUILD_ID;
 
@@ -31,8 +34,8 @@ void print_err(const char *format, ...) {
   va_list list;
   va_start(list, format);
 
-  printf("\033[31;1mERROR\033[0m ");
-  vprintf(format, list);
+  fprintf(stderr, "\033[31;1mERROR\033[0m ");
+  vfprintf(stderr, format, list);
 
   va_end(list);
 }
@@ -55,6 +58,7 @@ json_array *get_messages(const char *channel_id) {
     struct message *message;
 
     json_array *_messages = messages;
+    int i = 0;
     json_array_for_each(_messages, message) {
       int ret = regexec(&part_regex.comp, message->attachment.filename,
                         sizeof(part_regex.matches) / sizeof(regmatch_t),
@@ -89,7 +93,8 @@ json_array *get_messages(const char *channel_id) {
               }
             }
 
-            message_head->parts[message_head->parts_n - 1].id = part;
+            message_head->parts[message_head->parts_n - 1].idx = part;
+            message_head->parts[message_head->parts_n - 1].guild_idx = i;
             message_head->parts[message_head->parts_n - 1].message = message;
 
             message_head->attachment.size += message->attachment.size;
@@ -97,6 +102,7 @@ json_array *get_messages(const char *channel_id) {
           };
         }
       }
+      i++;
     }
 
     regfree(&part_regex.comp);
@@ -133,8 +139,10 @@ int dcfs_rmdir(const char *path) {
                 channel->name, resp.http_code);
         return -EAGAIN;
       }
-      free(channel->name);
+
+      discord_free_channel(channel);
       json_array_remove(&state->channels, i);
+
       return 0;
     }
     i++;
@@ -261,6 +269,10 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
       if (strcmp(filename, channel->name) == 0) {
         if (!state->current_channel ||
             strcmp(filename, state->current_channel->name) != 0) {
+
+          if (state->messages)
+            discord_free_messages(state->messages);
+
           state->messages = get_messages(channel->id.value);
           state->current_channel = channel;
         }
@@ -350,25 +362,26 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     }
   } else {
 
-    json_array *messages = NULL;
     struct channel *channel;
     json_array *_c = state->channels;
 
     json_array_for_each(_c, channel) {
       if (strcmp(path + 1, channel->name) == 0) {
-        messages = get_messages(channel->id.value);
+        if (state->messages)
+          discord_free_messages(state->messages);
+
+        state->messages = get_messages(channel->id.value);
       }
     }
 
-    if (!messages) {
+    if (!state->messages) {
       fprintf(stderr, "failed to get messages\n");
       return -ENOENT;
     }
 
-    state->messages = messages;
+    json_array *_m = state->messages;
     struct message *message;
-
-    json_array_for_each(messages, message) {
+    json_array_for_each(_m, message) {
       if (!message->is_part) {
 #ifdef __APPLE__
         struct fuse_darwin_attr st;
@@ -503,6 +516,18 @@ int dcfs_read(const char *path, char *buf, size_t size, off_t offset,
         request_get(message->attachment.url, &resp, 0);
         message->content = resp.raw;
         message->content_size = resp.size;
+
+        for (size_t i = 0; i < message->parts_n; i++) {
+          struct part part = message->parts[i];
+          resp = (struct response){0};
+
+          request_get(part.message->attachment.url, &resp, 0);
+
+          message->content =
+              realloc(message->content, message->content_size + resp.size);
+          memcpy(message->content + message->content_size, resp.raw, resp.size);
+          message->content_size += resp.size;
+        }
       }
 
       if (offset < message->content_size) {
@@ -602,6 +627,7 @@ int dcfs_unlink(const char *path) {
         return -EAGAIN;
       }
 
+      discord_free_message(message);
       json_array_remove(&state->messages, i);
       return 0;
     }
@@ -640,7 +666,6 @@ int main(int argc, char *argv[]) {
       .write = dcfs_write,
       .release = dcfs_release,
       .destroy = dcfs_destroy,
-      .fallocate = NULL,
 
   };
 

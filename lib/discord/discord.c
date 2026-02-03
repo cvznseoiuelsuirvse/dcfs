@@ -5,9 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void discord_free_channel(struct channel *channel) {
-  free(channel->name);
-}
+void discord_free_channel(struct channel *channel) { free(channel->name); }
 
 void discord_free_channels(json_array *channels) {
   struct channel *channel;

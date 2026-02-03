@@ -35,7 +35,8 @@ struct attachment {
 
 struct part {
   struct message *message;
-  int id;
+  int idx;
+  int guild_idx;
 };
 
 struct message {
@@ -72,9 +73,11 @@ struct channel {
 };
 
 void discord_free_channels(json_array *channels);
+void discord_free_channel(struct channel *channel);
 json_array *discord_get_channels(const char *guild_id);
 
 void discord_free_messages(json_array *messages);
+void discord_free_message(struct message *message);
 json_array *discord_get_messages(const char *channel_id);
 
 #endif

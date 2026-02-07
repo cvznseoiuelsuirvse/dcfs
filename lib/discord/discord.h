@@ -1,6 +1,7 @@
 #ifndef DCFS_DISCORD_H
 #define DCFS_DISCORD_H
 
+#include "discord/api.h"
 #include "json/json.h"
 
 #include <stdint.h>
@@ -35,8 +36,7 @@ struct attachment {
 
 struct part {
   struct message *message;
-  int part_idx;
-  int array_idx;
+  int idx;
 };
 
 struct message {
@@ -47,23 +47,8 @@ struct message {
   size_t parts_n;
   struct part *parts;
   int is_part;
+  int idx;
 };
-
-typedef enum channel_types {
-  GUILD_TEXT,
-  DM,
-  GUILD_VOICE,
-  GROUP_DM,
-  GUILD_CATEGORY,
-  GUILD_ANNOUNCEMENT,
-  ANNOUNCEMENT_THREAD,
-  PUBLIC_THREAD,
-  PRIVATE_THREAD,
-  GUILD_STAGE_VOICE,
-  GUILD_DIRECTORY,
-  GUILD_FORUM,
-  GUILD_MEDIA,
-} discord_channel_types;
 
 struct channel {
   struct snowflake id;

@@ -69,8 +69,8 @@ int request_get(const char *url, struct response *resp, char user_auth) {
   return res;
 }
 
-int request_post_file(const char *url, const char *filename, char *buffer,
-                      size_t buffer_size, struct response *resp) {
+int request_post_files(const char *url, const struct file *files,
+                       size_t files_n, struct response *resp) {
   CURLcode res;
 
   res = curl_global_init(CURL_GLOBAL_ALL);
@@ -81,13 +81,21 @@ int request_post_file(const char *url, const char *filename, char *buffer,
   if (curl) {
     curl_mime *form = curl_mime_init(curl);
 
+    curl_mimepart *part;
     struct curl_slist *headers = NULL;
     headers = append_auth_header(headers);
 
-    curl_mimepart *part = curl_mime_addpart(form);
-    curl_mime_data(part, buffer, buffer_size);
-    curl_mime_filename(part, filename);
-    curl_mime_name(part, "data");
+    for (size_t i = 0; i < files_n; i++) {
+      struct file file = files[i];
+      printf("request.c: filename: %s buffer_size: %ld\n", file.filename,
+             file.buffer_size);
+      part = curl_mime_addpart(form);
+      curl_mime_data(part, file.buffer, file.buffer_size);
+      curl_mime_filename(part, file.filename);
+      char name[64];
+      snprintf(name, sizeof(name), "files[%ld]", i);
+      curl_mime_name(part, name);
+    }
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);

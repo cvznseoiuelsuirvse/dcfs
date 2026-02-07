@@ -1,6 +1,6 @@
 CC = clang
 
-CPPFLAGS = -Ilib/ -Isrc/
+CPPFLAGS = -Ilib/ -Isrc/ -DMAX_FILESIZE=10
 LDFLAGS = `pkg-config --cflags --libs libcurl openssl fuse3`
 
 SRC = $(wildcard src/*.c) $(wildcard lib/**/*.c)

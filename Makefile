@@ -15,9 +15,6 @@ all: main
 main: $(TARGET)
 main: CFLAGS = -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Wno-sign-compare -O0 -g
 
-# debug: $(DEBUG)
-# debug: CFLAGS = -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Wno-sign-compare -O0 -g
-
 $(TARGET): $(OBJ)
 	mkdir -p $(dir $@)
 	$(CC) -o $@ $^ $(LDFLAGS)

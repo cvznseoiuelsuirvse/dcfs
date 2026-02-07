@@ -83,7 +83,6 @@ void print_op(const char *op, struct path *path) {
 
 struct dcfs_state {
   json_array *channels;
-  // struct channel *current_channel;
 };
 
 int dcfs_rmdir(const char *path) {
@@ -163,6 +162,7 @@ int dcfs_mkdir(const char *path, mode_t mode) {
   return 0;
 };
 
+#ifdef HAS_SETXATTR
 #ifdef __APPLE__
 int dcfs_getxattr(const char *path, const char *name, char *value, size_t size,
                   uint32_t flags) {
@@ -187,6 +187,7 @@ int dcfs_setxattr(const char *path, const char *name, const char *value,
   return 0;
 }
 #endif /* __APPLE__ */
+#endif
 
 #ifdef __APPLE__
 int dcfs_getattr(const char *path, struct fuse_darwin_attr *stbuf,
@@ -307,14 +308,6 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
   print_op("dcfs_readdir", &p);
 
   if (strcmp(path, "/") == 0) {
-    if (!state->channels) {
-      state->channels = discord_get_channels(GUILD_ID.value);
-      if (!state->channels) {
-        print_err("failed to get channels of guild %s\n", GUILD_ID.value);
-        return -ENOENT;
-      }
-    }
-
     struct channel *channel;
     json_array *_c = state->channels;
     json_array_for_each(_c, channel) {
@@ -666,9 +659,11 @@ int dcfs_unlink(const char *path) {
           discord_delete_messsage(channel->id.value, part.message->id.value,
                                   &resp);
           last_deleted_message_id = hash_string(part.message->id.value);
-          discord_free_message(part.message);
-          json_array_remove_ptr(&channel->messages, part.message);
+          print_inf("trying to delete %s (%p) \n",
+                    part.message->attachment.filename, part.message);
         }
+        discord_free_message(part.message);
+        json_array_remove_ptr(&channel->messages, part.message);
       }
 
       discord_free_message(message);
@@ -682,6 +677,7 @@ int dcfs_unlink(const char *path) {
 
 void dcfs_destroy(void *data) {
   struct dcfs_state *state = data;
+  print_inf("dcfs_destroy\n");
 
   if (state->channels)
     discord_free_channels(state->channels);
@@ -693,8 +689,10 @@ int main(int argc, char *argv[]) {
       .getattr = dcfs_getattr,
       .chown = dcfs_chown,
       .chmod = dcfs_chmod,
+#ifdef HAS_SETXATTR
       .getxattr = dcfs_getxattr,
       .setxattr = dcfs_setxattr,
+#endif
       .mkdir = dcfs_mkdir,
       .rmdir = dcfs_rmdir,
       .unlink = dcfs_unlink,
@@ -741,5 +739,11 @@ int main(int argc, char *argv[]) {
   free(opts.mountpoint);
 
   struct dcfs_state state = {0};
+  state.channels = discord_get_channels(GUILD_ID.value);
+  if (!state.channels) {
+    print_err("failed to get channels of guild %s\n", GUILD_ID.value);
+    return 1;
+  }
+
   return fuse_main(argc, argv, &operations, &state);
 }

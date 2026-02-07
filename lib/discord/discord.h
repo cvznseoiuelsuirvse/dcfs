@@ -47,7 +47,6 @@ struct message {
   size_t parts_n;
   struct part *parts;
   int is_part;
-  int idx;
 };
 
 struct channel {

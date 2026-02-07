@@ -73,14 +73,34 @@ void *json_array_push(json_array *array, void *data, size_t data_size,
   memcpy(node->data, data, data_size);
   return node->data;
 }
-
-void json_array_remove(json_array **head, size_t n) {
+void json_array_remove_ptr(json_array **head, void *obj) {
   if (!*head)
     return;
 
   json_array *array = *head;
 
-  for (size_t i = 0; array; array = array->next, i++) {
+  for (; array; array = array->next) {
+    if (array->data == obj) {
+      if (array->prev) {
+        array->prev->next = array->next;
+      } else {
+        *head = array->next;
+      }
+
+      free(array->data);
+      free(array);
+      break;
+    }
+  }
+}
+
+void json_array_remove(json_array **head, int n) {
+  if (!*head)
+    return;
+
+  json_array *array = *head;
+
+  for (int i = 0; array; array = array->next, i++) {
     if (i == n) {
       if (array->prev) {
         array->prev->next = array->next;
@@ -93,15 +113,13 @@ void json_array_remove(json_array **head, size_t n) {
       break;
     }
   }
-
-  return;
 }
 
-void *json_array_get(json_array *array, size_t n) {
+void *json_array_get(json_array *array, int n) {
   if (!array)
     return NULL;
 
-  for (size_t i = 0; array && array->data; array = array->next, i++) {
+  for (int i = 0; array && array->data; array = array->next, i++) {
     if (i == n)
       return array->data;
   }

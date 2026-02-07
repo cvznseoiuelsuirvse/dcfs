@@ -59,8 +59,9 @@ json_array *json_array_new();
 void json_array_destroy(json_array *array);
 void *json_array_push(json_array *array, void *data, size_t data_size,
                       json_value_type type);
-void json_array_remove(json_array **head, size_t n);
-void *json_array_get(json_array *array, size_t n);
+void json_array_remove(json_array **head, int n);
+void json_array_remove_ptr(json_array **head, void *obj);
+void *json_array_get(json_array *array, int n);
 int json_array_size(json_array *array);
 
 #endif

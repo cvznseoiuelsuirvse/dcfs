@@ -30,7 +30,6 @@ void discord_free_messages(json_array *messages) {
 static json_array *discord_get_all_messages(const char *channel_id) {
   json_array *messages = json_array_new();
 
-  int message_idx = 0;
   int messages_n = -1;
   struct response resp = {0};
 
@@ -94,7 +93,6 @@ static json_array *discord_get_all_messages(const char *channel_id) {
         message.is_part = 0;
         message.parts_n = 0;
         message.parts = NULL;
-        message.idx = message_idx++;
 
         json_string filename = json_object_get(attachment, "filename");
         json_number *size = json_object_get(attachment, "size");

@@ -17,7 +17,6 @@
 #include <unistd.h>
 #include <zlib.h>
 
-// #define FILENAME (path) + (last_index((path), '/') + 1)
 #define GET_CURRENT_CHANNEL(ch)                                                \
   json_array *_c = (state)->channels;                                          \
   json_array_for_each(_c, (ch)) {                                              \
@@ -100,7 +99,6 @@ int dcfs_rmdir(const char *path) {
 
   struct channel *channel;
   json_array *_ch = state->channels;
-  int i = 0;
   json_array_for_each(_ch, channel) {
     if (strcmp(path + 1, channel->name) == 0) {
       struct response resp = {0};
@@ -113,11 +111,10 @@ int dcfs_rmdir(const char *path) {
       }
 
       discord_free_channel(channel);
-      json_array_remove(&state->channels, i);
+      json_array_remove_ptr(&state->channels, channel);
 
       return 0;
     }
-    i++;
   }
   return -ENOENT;
 }
@@ -169,12 +166,12 @@ int dcfs_mkdir(const char *path, mode_t mode) {
 #ifdef __APPLE__
 int dcfs_getxattr(const char *path, const char *name, char *value, size_t size,
                   uint32_t flags) {
-  return -ENOTSUP;
+  return 0;
 }
 #else
 int dcfs_getxattr(const char *path, const char *name, char *value,
                   size_t size) {
-  return -ENOTSUP;
+  return 0;
 }
 
 #endif
@@ -240,7 +237,8 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
     json_array *_ch = state->channels;
     json_array_for_each(_ch, channel) {
       if (strcmp(p.dir, channel->name) == 0) {
-        channel->messages = discord_get_messages(channel->id.value);
+        if (!channel->messages)
+          channel->messages = discord_get_messages(channel->id.value);
 
 #ifdef __APPLE__
         stbuf->mode = S_IFDIR | 0755;
@@ -333,16 +331,14 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     }
   } else {
     struct channel *channel;
-    json_array *_c = state->channels;
-    json_array_for_each(_c, channel) {
-      if (strcmp(channel->name, path + 1) == 0) {
-        channel->messages = discord_get_messages(channel->id.value);
-        if (!channel->messages) {
-          fprintf(stderr, "failed to get %s channel messages\n",
-                  channel->id.value);
-          return -ENOENT;
-        }
-        break;
+    GET_CURRENT_CHANNEL(channel);
+
+    if (!channel->messages) {
+      channel->messages = discord_get_messages(channel->id.value);
+      if (!channel->messages) {
+        fprintf(stderr, "failed to get %s channel messages\n",
+                channel->id.value);
+        return -ENOENT;
       }
     }
 
@@ -393,10 +389,8 @@ int dcfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
   struct channel *channel;
   GET_CURRENT_CHANNEL(channel);
 
-  struct message *tmp_message = json_array_push(
-      channel->messages, &message, sizeof(struct message), JSON_UNKNOWN);
-  tmp_message->idx = json_array_size(channel->messages) + 1;
-
+  json_array_push(channel->messages, &message, sizeof(struct message),
+                  JSON_UNKNOWN);
   return 0;
 }
 
@@ -533,7 +527,7 @@ int upload_batch(struct channel *channel, struct message *head,
   if (resp.http_code != 200) {
     print_err("failed to upload file %s. error code: %d\n",
               head->attachment.filename, resp.http_code);
-    json_array_remove(&channel->messages, head->idx);
+    json_array_remove_ptr(&channel->messages, head);
     free(resp.raw);
 
     return -EAGAIN;
@@ -575,7 +569,7 @@ int upload_batch(struct channel *channel, struct message *head,
                               ((part_n / 10) + 1) * 10 * sizeof(struct part));
       }
 
-      part = &head->parts[part_n];
+      part = &head->parts[part_n - 1];
       part->message = json_array_push(channel->messages, &part_message,
                                       sizeof(struct message), JSON_UNKNOWN);
       part->idx = json_array_size(channel->messages) - 1;
@@ -604,17 +598,16 @@ int dcfs_release(const char *path, struct fuse_file_info *fi) {
   json_array_for_each(_m, message) {
     if (strcmp(message->attachment.filename, p.filename) == 0) {
       if (!message->attachment.url && message->content) {
-
         int files_n = 0;
         struct file files[10];
-        memset(&files, 0, 10 * sizeof(struct file));
+        memset(&files, 0, sizeof(files));
 
         for (size_t offset = 0; offset < message->content_size;
              offset += MAX_FILESIZE, files_n++) {
           if (files_n > 0 && files_n % 10 == 0) {
             if ((ret = upload_batch(channel, message, files, 10)) != 0)
               goto out;
-            memset(&files, 0, 10 * sizeof(struct file));
+            memset(&files, 0, sizeof(files));
           }
 
           struct file *file = &files[files_n % 10];
@@ -659,7 +652,6 @@ int dcfs_unlink(const char *path) {
   struct channel *channel;
   GET_CURRENT_CHANNEL(channel);
 
-  int i = 0;
   json_array *_m = channel->messages;
   struct message *message;
   json_array_for_each(_m, message) {
@@ -675,15 +667,14 @@ int dcfs_unlink(const char *path) {
                                   &resp);
           last_deleted_message_id = hash_string(part.message->id.value);
           discord_free_message(part.message);
-          json_array_remove(&channel->messages, part.idx);
+          json_array_remove_ptr(&channel->messages, part.message);
         }
       }
 
       discord_free_message(message);
-      json_array_remove(&channel->messages, i);
+      json_array_remove_ptr(&channel->messages, message);
       return 0;
     }
-    i++;
   }
 
   return -EAGAIN;

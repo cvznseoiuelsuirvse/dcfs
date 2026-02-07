@@ -1,17 +1,9 @@
 #include "json/json.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-static size_t hash_string(const char *string) {
-  size_t hash = 5381;
-  int c;
-  while ((c = *string++))
-    hash = ((hash << 5) + hash) + c;
-
-  return hash;
-}
 
 json_array *json_array_new() {
   json_array *array = malloc(sizeof(json_array));

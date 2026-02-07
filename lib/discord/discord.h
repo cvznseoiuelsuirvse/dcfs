@@ -35,8 +35,8 @@ struct attachment {
 
 struct part {
   struct message *message;
-  int idx;
-  int guild_idx;
+  int part_idx;
+  int array_idx;
 };
 
 struct message {
@@ -70,6 +70,7 @@ struct channel {
   char *name;
   enum channel_types type;
   char has_parent;
+  json_array *messages;
 };
 
 void discord_free_channels(json_array *channels);

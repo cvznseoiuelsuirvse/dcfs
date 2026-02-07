@@ -157,3 +157,12 @@ int last_index(const char *string, char c) {
       idx = i;
   return idx;
 }
+
+int hash_string(const char *string) {
+  int hash = 5381;
+  int c;
+  while ((c = *string++))
+    hash = ((hash << 5) + hash) + c;
+
+  return hash;
+}

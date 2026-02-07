@@ -1,63 +1,16 @@
 #include "discord.h"
 #include "api.h"
+#include "util.h"
 
+#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-void discord_free_channel(struct channel *channel) { free(channel->name); }
-
-void discord_free_channels(json_array *channels) {
-  struct channel *channel;
-  json_array *_c = channels;
-  json_array_for_each(_c, channel) { discord_free_channel(channel); }
-  json_array_destroy(channels);
-}
-
-json_array *discord_get_channels(const char *guild_id) {
-  size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("guilds") +
-                        strlen(guild_id) + strlen("channels") + 5;
-  char new_url[new_url_size];
-  snprintf(new_url, new_url_size, "%s/%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
-           guild_id, "channels");
-
-  json_array *channels = json_array_new();
-  struct response resp = {0};
-
-  if (request_get(new_url, &resp, 1) != 0) {
-    free(resp.raw);
-    json_array_destroy(channels);
-    return NULL;
-  }
-
-  if (resp.http_code != 200) {
-    json_array_destroy(channels);
-    return NULL;
-  }
-
-  json_array *json;
-  json_load(resp.raw, (void **)&json);
-  free(resp.raw);
-
-  json_object *o;
-  json_array_for_each(json, o) {
-    json_string id = json_object_get(o, "id");
-    json_string name = json_object_get(o, "name");
-    json_number *type = json_object_get(o, "type");
-    json_word *parent = json_object_get(o, "parent_id");
-
-    struct channel ch = {
-        .type = *type,
-        .has_parent = *parent == JSON_NULL ? 0 : 1,
-        .name = strdup(name),
-    };
-    snowflake_init(id, &ch.id);
-    json_array_push(channels, &ch, sizeof(struct channel), JSON_UNKNOWN);
-  }
-
-  json_array_destroy(json);
-  return channels;
-}
+static struct {
+  regex_t comp;
+  regmatch_t matches[3];
+} part_regex;
 
 void discord_free_message(struct message *message) {
   free(message->attachment.filename);
@@ -75,7 +28,7 @@ void discord_free_messages(json_array *messages) {
   json_array_destroy(messages);
 }
 
-json_array *discord_get_messages(const char *channel_id) {
+static json_array *discord_get_all_messages(const char *channel_id) {
   json_array *messages = json_array_new();
 
   int messages_n = -1;
@@ -160,16 +113,15 @@ json_array *discord_get_messages(const char *channel_id) {
     json_array_for_each(json, o) {
       json_string message_id = json_object_get(o, "id");
 
-      struct message message;
-      snowflake_init(message_id, &message.id);
-      message.content = NULL;
-      message.is_part = 0;
-      message.parts_n = 0;
-      message.parts = NULL;
-
+      json_object *attachment;
       json_array *attachments = json_object_get(o, "attachments");
-      if (json_array_size(attachments) > 0) {
-        json_object *attachment = json_array_get(attachments, 0);
+      json_array_for_each(attachments, attachment) {
+        struct message message;
+        snowflake_init(message_id, &message.id);
+        message.content = NULL;
+        message.is_part = 0;
+        message.parts_n = 0;
+        message.parts = NULL;
 
         json_string filename = json_object_get(attachment, "filename");
         json_number *size = json_object_get(attachment, "size");
@@ -178,14 +130,140 @@ json_array *discord_get_messages(const char *channel_id) {
         message.attachment.filename = strdup(filename);
         message.attachment.size = *size;
         message.attachment.url = strdup(url);
-
-      } else {
-        printf("WARNING: no attachments found in %s\n", message_id);
+        json_array_push(messages, &message, sizeof(struct message),
+                        JSON_UNKNOWN);
       }
-      json_array_push(messages, &message, sizeof(struct message), JSON_UNKNOWN);
     }
     json_array_destroy(json);
   }
 
   return messages;
+}
+
+json_array *discord_get_messages(const char *channel_id) {
+  regcomp(&part_regex.comp, "(.+)\\.PART([0-9]+)", REG_EXTENDED);
+
+  json_array *messages = discord_get_all_messages(channel_id);
+  if (messages) {
+    struct message *message;
+
+    json_array *_messages = messages;
+    size_t parts_cap = 10;
+    int i = 0;
+    json_array_for_each(_messages, message) {
+      int ret = regexec(&part_regex.comp, message->attachment.filename,
+                        sizeof(part_regex.matches) / sizeof(regmatch_t),
+                        part_regex.matches, 0);
+
+      if (ret == 0) {
+        regmatch_t m_body = part_regex.matches[1];
+        regmatch_t m_part = part_regex.matches[2];
+        size_t part = str_to_int(message->attachment.filename + m_part.rm_so,
+                                 m_part.rm_eo - m_part.rm_so);
+
+        size_t body_size = m_body.rm_eo - m_body.rm_so;
+        char body[body_size + 1];
+        memcpy(body, message->attachment.filename + m_body.rm_so, body_size);
+        body[body_size] = 0;
+        message->is_part = 1;
+
+        json_array *_messages1 = messages;
+        struct message *message_head;
+        json_array_for_each(_messages1, message_head) {
+          if (strcmp(message_head->attachment.filename, body) == 0) {
+            printf(
+                "\033[34;1mINFO\033[0m  found part %ld of %s. parts_cap: %ld\n",
+                part, body, parts_cap);
+            message_head->parts_n++;
+
+            if (message_head->parts && part > parts_cap) {
+              parts_cap = ((part / 10) + 1) * 10;
+              message_head->parts =
+                  realloc(message_head->parts, parts_cap * sizeof(struct part));
+            } else if (!message_head->parts) {
+              if (part > parts_cap) {
+                parts_cap = ((part / 10) + 1) * 10;
+              }
+              message_head->parts = malloc(parts_cap * sizeof(struct part));
+              if (!message_head->parts) {
+                discord_free_messages(messages);
+                return NULL;
+              }
+            }
+
+            message_head->parts[part - 1].part_idx = part;
+            message_head->parts[part - 1].array_idx = i;
+            message_head->parts[part - 1].message = message;
+
+            message_head->attachment.size += message->attachment.size;
+            break;
+          };
+        }
+      }
+      i++;
+    }
+
+    regfree(&part_regex.comp);
+    return messages;
+  }
+
+  regfree(&part_regex.comp);
+  return NULL;
+}
+
+void discord_free_channel(struct channel *channel) {
+  discord_free_messages(channel->messages);
+  free(channel->name);
+}
+
+void discord_free_channels(json_array *channels) {
+  struct channel *channel;
+  json_array *_c = channels;
+  json_array_for_each(_c, channel) { discord_free_channel(channel); }
+  json_array_destroy(channels);
+}
+
+json_array *discord_get_channels(const char *guild_id) {
+  size_t new_url_size = strlen(DISCORD_API_BASE_URL) + strlen("guilds") +
+                        strlen(guild_id) + strlen("channels") + 5;
+  char new_url[new_url_size];
+  snprintf(new_url, new_url_size, "%s/%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
+           guild_id, "channels");
+
+  json_array *channels = json_array_new();
+  struct response resp = {0};
+
+  if (request_get(new_url, &resp, 1) != 0) {
+    free(resp.raw);
+    json_array_destroy(channels);
+    return NULL;
+  }
+
+  if (resp.http_code != 200) {
+    json_array_destroy(channels);
+    return NULL;
+  }
+
+  json_array *json;
+  json_load(resp.raw, (void **)&json);
+  free(resp.raw);
+
+  json_object *o;
+  json_array_for_each(json, o) {
+    json_string id = json_object_get(o, "id");
+    json_string name = json_object_get(o, "name");
+    json_number *type = json_object_get(o, "type");
+    json_word *parent = json_object_get(o, "parent_id");
+
+    struct channel ch = {
+        .type = *type,
+        .has_parent = *parent == JSON_NULL ? 0 : 1,
+        .name = strdup(name),
+    };
+    snowflake_init(id, &ch.id);
+    json_array_push(channels, &ch, sizeof(struct channel), JSON_UNKNOWN);
+  }
+
+  json_array_destroy(json);
+  return channels;
 }

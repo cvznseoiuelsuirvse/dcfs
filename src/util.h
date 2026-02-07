@@ -17,5 +17,6 @@ void print_size(float n);
 
 int count_char(const char *string, char c);
 int last_index(const char *string, char c);
+int hash_string(const char *string);
 
 #endif

@@ -6,7 +6,7 @@
 struct response {
   char *raw;
   size_t size;
-  int http_code;
+  long http_code;
 };
 
 struct file {

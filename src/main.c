@@ -107,7 +107,7 @@ int dcfs_rmdir(const char *path) {
       discord_delete_channel(channel->id.value, &resp);
 
       if (resp.http_code != 200) {
-        fprintf(stderr, "failed to delete %s channel. http code: %d\n",
+        fprintf(stderr, "failed to delete %s channel. http code: %ld\n",
                 channel->name, resp.http_code);
         return -EAGAIN;
       }
@@ -139,7 +139,7 @@ int dcfs_mkdir(const char *path, mode_t mode) {
   discord_create_channel(GUILD_ID.value, path + 1, &resp);
 
   if (resp.http_code != 201) {
-    fprintf(stderr, "failed to create a new channel. http_code: %d\n",
+    fprintf(stderr, "failed to create a new channel. http_code: %ld\n",
             resp.http_code);
     return -EAGAIN;
   }
@@ -166,10 +166,18 @@ int dcfs_mkdir(const char *path, mode_t mode) {
   return 0;
 };
 
+#ifdef __APPLE__
 int dcfs_getxattr(const char *path, const char *name, char *value, size_t size,
                   uint32_t flags) {
   return -ENOTSUP;
 }
+#else
+int dcfs_getxattr(const char *path, const char *name, char *value,
+                  size_t size) {
+  return -ENOTSUP;
+}
+
+#endif
 
 #ifdef __APPLE__
 int dcfs_setxattr(const char *path, const char *name, const char *value,

@@ -119,10 +119,9 @@ int dcfs_rmdir(const char *path) {
 }
 
 int dcfs_mkdir(const char *path, mode_t mode) {
-  // if (count_char(path, '/') != 1) {
-  //   fprintf(stderr, "can't create directory in a directory\n");
-  //   return -EPERM;
-  // }
+  if (count_char(path, '/') != 1) {
+    return -EPERM;
+  }
 
   struct fuse_context *ctx = fuse_get_context();
   struct dcfs_state *state = ctx->private_data;
@@ -356,7 +355,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 }
 
 int dcfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
-  if (strcmp(path, "/") == 0) {
+  if (count_char(path, '/') != 2) {
     return -EPERM;
   }
 
@@ -371,9 +370,9 @@ int dcfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 
   message.content = NULL;
   message.content_size = 0;
-  message.is_part = 0;
   message.parts = NULL;
   message.parts_n = 0;
+  message.is_part = 0;
 
   message.attachment.filename = strdup(p.filename);
   message.attachment.size = 0;
@@ -482,15 +481,16 @@ int dcfs_read(const char *path, char *buf, size_t size, off_t offset,
         message->content_size = resp.size;
 
         for (size_t i = 0; i < message->parts_n; i++) {
-          struct part part = message->parts[i];
+          struct message *part = message->parts[i];
           resp = (struct response){0};
 
-          request_get(part.message->attachment.url, &resp, 0);
+          request_get(part->attachment.url, &resp, 0);
 
           message->content =
               realloc(message->content, message->content_size + resp.size);
           memcpy(message->content + message->content_size, resp.raw, resp.size);
           message->content_size += resp.size;
+          free(resp.raw);
         }
       }
 
@@ -541,31 +541,34 @@ int upload_batch(struct channel *channel, struct message *head,
 
     if (strcmp(filename, head->attachment.filename) == 0) {
       snowflake_init(message_id, &head->id);
-      head->parts = malloc(10 * sizeof(struct part));
+      head->parts = malloc(10 * sizeof(void));
       head->attachment.size = *size;
       head->attachment.url = strdup(url);
 
     } else {
-      struct message part_message;
-      struct part *part;
+      struct message part_message = {
+          .is_part = 1,
+          .content = NULL,
+          .parts = NULL,
+      };
       snowflake_init(message_id, &part_message.id);
-      part_message.is_part = 1;
+
       part_message.attachment.filename = strdup(filename);
       part_message.attachment.size = *size;
       part_message.attachment.url = strdup(url);
+      head->attachment.size += *size;
 
       int part_n_start = last_index(filename, 'T');
       size_t part_n = strtol(filename + part_n_start + 1, NULL, 10);
 
       if (head->parts_n++ <= part_n) {
-        head->parts = realloc(head->parts,
-                              ((part_n / 10) + 1) * 10 * sizeof(struct part));
+        head->parts =
+            realloc(head->parts, ((part_n / 10) + 1) * 10 * sizeof(void));
       }
 
-      part = &head->parts[part_n - 1];
-      part->message = json_array_push(channel->messages, &part_message,
-                                      sizeof(struct message), JSON_UNKNOWN);
-      part->idx = json_array_size(channel->messages) - 1;
+      head->parts[part_n - 1] =
+          json_array_push(channel->messages, &part_message,
+                          sizeof(struct message), JSON_UNKNOWN);
     }
   }
 
@@ -647,6 +650,7 @@ int dcfs_unlink(const char *path) {
 
   json_array *_m = channel->messages;
   struct message *message;
+
   json_array_for_each(_m, message) {
     if (strcmp(p.filename, message->attachment.filename) == 0) {
       struct response resp = {0};
@@ -654,16 +658,15 @@ int dcfs_unlink(const char *path) {
 
       int last_deleted_message_id = hash_string(message->id.value);
       for (size_t i = 0; i < message->parts_n; i++) {
-        struct part part = message->parts[i];
-        if (hash_string(part.message->id.value) != last_deleted_message_id) {
-          discord_delete_messsage(channel->id.value, part.message->id.value,
-                                  &resp);
-          last_deleted_message_id = hash_string(part.message->id.value);
-          print_inf("trying to delete %s (%p) \n",
-                    part.message->attachment.filename, part.message);
+        struct message *part = message->parts[i];
+        if (hash_string(part->id.value) != last_deleted_message_id) {
+          discord_delete_messsage(channel->id.value, part->id.value, &resp);
+          last_deleted_message_id = hash_string(part->id.value);
         }
-        discord_free_message(part.message);
-        json_array_remove_ptr(&channel->messages, part.message);
+        print_inf("trying to delete %s (%p) \n", part->attachment.filename,
+                  part);
+        discord_free_message(part);
+        json_array_remove_ptr(&channel->messages, part);
       }
 
       discord_free_message(message);

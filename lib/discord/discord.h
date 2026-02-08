@@ -34,18 +34,13 @@ struct attachment {
   size_t size;
 };
 
-struct part {
-  struct message *message;
-  int idx;
-};
-
 struct message {
   struct snowflake id;
   struct attachment attachment;
   char *content;
   size_t content_size;
+  struct message **parts;
   size_t parts_n;
-  struct part *parts;
   int is_part;
 };
 

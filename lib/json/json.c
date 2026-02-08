@@ -87,6 +87,9 @@ void json_array_remove_ptr(json_array **head, void *obj) {
         *head = array->next;
       }
 
+      if (array->next)
+        array->next->prev = array->prev;
+
       free(array->data);
       free(array);
       break;
@@ -107,6 +110,9 @@ void json_array_remove(json_array **head, int n) {
       } else {
         *head = array->next;
       }
+
+      if (array->next)
+        array->next->prev = array->prev;
 
       free(array->data);
       free(array);

@@ -1,15 +1,14 @@
 CC = clang
 
-CPPFLAGS = -Ilib/ -Isrc/ -DMAX_FILESIZE=128
+CPPFLAGS = -Ilib/ -Isrc/ 
 LDFLAGS = `pkg-config --cflags --libs libcurl openssl fuse3`
 
 SRC = $(wildcard src/*.c) $(wildcard lib/**/*.c)
 OBJ = $(SRC:%.c=build/%.o)
 
 TARGET = bin/main
-# DEBUG = bin/debug
 
-.PHONY: all clean debug main
+.PHONY: all clean main
 
 all: main
 main: $(TARGET)
@@ -22,11 +21,6 @@ $(TARGET): $(OBJ)
 build/%.o: %.c
 	mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $<
-
-# $(DEBUG): $(SRC)
-# 	mkdir -p $(dir $@)
-# 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
-
 
 
 clean:

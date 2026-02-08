@@ -90,9 +90,9 @@ static json_array *discord_get_all_messages(const char *channel_id) {
         struct message message;
         snowflake_init(message_id, &message.id);
         message.content = NULL;
-        message.is_part = 0;
         message.parts_n = 0;
         message.parts = NULL;
+        message.is_part = 0;
 
         json_string filename = json_object_get(attachment, "filename");
         json_number *size = json_object_get(attachment, "size");
@@ -146,19 +146,17 @@ json_array *discord_get_messages(const char *channel_id) {
             if (message_head->parts && part > parts_cap) {
               parts_cap = ((part / 10) + 1) * 10;
               message_head->parts =
-                  realloc(message_head->parts, parts_cap * sizeof(struct part));
+                  realloc(message_head->parts, parts_cap * sizeof(void *));
             } else if (!message_head->parts) {
               parts_cap = ((part / 10) + 1) * 10;
-              message_head->parts = malloc(parts_cap * sizeof(struct part));
+              message_head->parts = malloc(parts_cap * sizeof(void *));
               if (!message_head->parts) {
                 discord_free_messages(messages);
                 return NULL;
               }
             }
 
-            message_head->parts[part - 1].idx = part;
-            message_head->parts[part - 1].message = message;
-
+            message_head->parts[part - 1] = message;
             message_head->attachment.size += message->attachment.size;
             break;
           };

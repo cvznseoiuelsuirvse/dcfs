@@ -1,0 +1,6 @@
+option('max_filesize',
+  type: 'integer',
+  value: 10485760,
+  min: 64,
+  description: 'Maximum file size in bytes (default: 10MB)'
+)

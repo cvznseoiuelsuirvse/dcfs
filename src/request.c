@@ -87,8 +87,6 @@ int request_post_files(const char *url, const struct file *files,
 
     for (size_t i = 0; i < files_n; i++) {
       struct file file = files[i];
-      printf("request.c: filename: %s buffer_size: %ld\n", file.filename,
-             file.buffer_size);
       part = curl_mime_addpart(form);
       curl_mime_data(part, file.buffer, file.buffer_size);
       curl_mime_filename(part, file.filename);

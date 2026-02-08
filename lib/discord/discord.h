@@ -10,6 +10,8 @@
 #include <string.h>
 #include <time.h>
 
+#define MAX_PARTS 256
+
 struct snowflake {
   time_t timestamp;
   uint8_t internal_worker_id;
@@ -29,7 +31,7 @@ inline static void snowflake_init(const char *ts, struct snowflake *snowflake) {
 }
 
 struct attachment {
-  char *filename;
+  char filename[256];
   char *url;
   size_t size;
 };
@@ -39,14 +41,14 @@ struct message {
   struct attachment attachment;
   char *content;
   size_t content_size;
-  struct message **parts;
+  struct message *parts[MAX_PARTS];
   size_t parts_n;
   int is_part;
 };
 
 struct channel {
   struct snowflake id;
-  char *name;
+  char name[128];
   enum channel_types type;
   char has_parent;
   json_array *messages;

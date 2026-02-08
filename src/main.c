@@ -10,6 +10,7 @@
 #include <fuse3/fuse.h>
 #include <fuse3/fuse_lowlevel.h>
 
+#include <assert.h>
 #include <curl/curl.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -17,10 +18,11 @@
 #include <unistd.h>
 #include <zlib.h>
 
+#define STREQ(s1, s2) (strcmp((s1), (s2)) == 0)
 #define GET_CURRENT_CHANNEL(ch)                                                \
   json_array *_c = (state)->channels;                                          \
   json_array_for_each(_c, (ch)) {                                              \
-    if (strcmp((ch)->name, (p).dir) == 0)                                      \
+    if (STREQ((ch)->name, (p).dir))                                            \
       break;                                                                   \
   }
 
@@ -28,16 +30,22 @@
 #define MAX_FILESIZE 10485760
 #endif
 
-struct snowflake GUILD_ID;
+static const char *program_name;
+static struct snowflake GUILD_ID;
+
 struct path {
   char dir[128];
   char filename[256];
 };
 
-void path_init(const char *path, struct path *p) {
+struct dcfs_state {
+  json_array *channels;
+};
+
+static void path_init(const char *path, struct path *p) {
   memset(p, 0, sizeof(struct path));
 
-  if (strcmp(path, "/") != 0) {
+  if (!STREQ(path, "/")) {
     int last_slash_idx = last_index(path, '/');
 
     if (last_slash_idx > 0) {
@@ -50,27 +58,44 @@ void path_init(const char *path, struct path *p) {
   }
 }
 
-void print_err(const char *format, ...) {
+static inline struct dcfs_state *get_state() {
+  return (fuse_get_context())->private_data;
+};
+
+static inline struct channel *get_channel(json_array **channels,
+                                          struct path *path) {
+  json_array *_c = *channels;
+  struct channel *_ch;
+  json_array_for_each(_c, _ch) {
+    if (STREQ(_ch->name, path->dir)) {
+      return _ch;
+    }
+  }
+
+  return NULL;
+}
+
+static void print_err(const char *format, ...) {
   va_list list;
   va_start(list, format);
 
-  fprintf(stderr, "\033[31;1mERROR\033[0m ");
+  fprintf(stderr, "%s: \033[31;1mERROR\033[0m ", program_name);
   vfprintf(stderr, format, list);
 
   va_end(list);
 }
 
-void print_inf(const char *format, ...) {
+static void print_inf(const char *format, ...) {
   va_list list;
   va_start(list, format);
 
-  printf("\033[34;1mINFO\033[0m ");
+  printf("%s \033[34;1mINFO\033[0m ", program_name);
   vprintf(format, list);
 
   va_end(list);
 }
 
-void print_op(const char *op, struct path *path) {
+static void print_op(const char *op, struct path *path) {
   if (!*path->dir && !*path->filename) {
     printf("\033[35;1mOPERATION \033[37m%s\033[0m: /\n", op);
   } else if (!*path->filename) {
@@ -81,16 +106,160 @@ void print_op(const char *op, struct path *path) {
   }
 }
 
-struct dcfs_state {
-  json_array *channels;
+static int process_files(struct channel *channel, struct message *head,
+                         struct file *files, size_t files_n) {
+  struct response resp = {0};
+  discord_create_attachments(channel->id.value, files, files_n, &resp);
+
+  if (resp.http_code != 200) {
+    print_err("failed to upload file %s. error code: %d\n",
+              head->attachment.filename, resp.http_code);
+    json_array_remove_ptr(&channel->messages, head);
+    free(resp.raw);
+
+    return -EAGAIN;
+  }
+
+  json_object *json;
+  json_load(resp.raw, (void **)&json);
+  free(resp.raw);
+
+  json_string message_id = json_object_get(json, "id");
+
+  json_object *attachment;
+  json_array *attachments = json_object_get(json, "attachments");
+  json_array_for_each(attachments, attachment) {
+    json_string filename = json_object_get(attachment, "filename");
+    json_number *size = json_object_get(attachment, "size");
+    json_string url = json_object_get(attachment, "url");
+
+    if (STREQ(filename, head->attachment.filename)) {
+      snowflake_init(message_id, &head->id);
+      head->attachment.size = *size;
+      head->attachment.url = strdup(url);
+
+    } else {
+      struct message part_message = {
+          .is_part = 1,
+          .content = NULL,
+      };
+      snowflake_init(message_id, &part_message.id);
+
+      strcpy(part_message.attachment.filename, filename);
+      part_message.attachment.size = *size;
+      part_message.attachment.url = strdup(url);
+      head->attachment.size += *size;
+
+      int part_n_start = last_index(filename, 'T');
+      size_t part_n = strtol(filename + part_n_start + 1, NULL, 10);
+
+      head->parts[part_n - 1] =
+          json_array_push(channel->messages, &part_message,
+                          sizeof(struct message), JSON_UNKNOWN);
+      head->parts_n++;
+    }
+  }
+
+  json_object_destroy(json);
+  return 0;
+}
+
+static int upload_file(struct channel *channel, const char *filename) {
+  int ret = -ENOENT;
+  struct message *message;
+  json_array *_m = channel->messages;
+
+  json_array_for_each(_m, message) {
+    if (STREQ(message->attachment.filename, filename)) {
+      ret = -ENODATA;
+      if (!message->attachment.url && message->content) {
+        ret = 0;
+        int files_n = 0;
+        struct file files[10];
+        memset(&files, 0, sizeof(files));
+
+        if (message->content_size / MAX_FILESIZE >= MAX_PARTS) {
+          ret = -EFBIG;
+          goto out;
+        }
+        print_inf("uploading %s %d (%p)\n", filename, message->content_size,
+                  message);
+
+        for (size_t offset = 0; offset < message->content_size;
+             offset += MAX_FILESIZE, files_n++) {
+
+          print_inf("uploading %s offset: %ld\n", filename, offset);
+          if (files_n > 0 && files_n % 10 == 0) {
+            if ((ret = process_files(channel, message, files, 10)) != 0)
+              goto out;
+            memset(&files, 0, sizeof(files));
+          }
+
+          struct file *file = &files[files_n % 10];
+
+          if (offset == 0) {
+            memcpy(file->filename, filename, strlen(filename));
+          } else {
+            snprintf(file->filename, sizeof(file->filename), "%s.PART%d",
+                     filename, files_n);
+          }
+
+          file->buffer = message->content + offset;
+          size_t remaining = message->content_size - offset;
+          file->buffer_size =
+              remaining < MAX_FILESIZE ? remaining : MAX_FILESIZE;
+        }
+
+        if (files_n > 0) {
+          ret = process_files(channel, message, files, files_n % 10);
+        }
+
+      out:
+        free(message->content);
+        message->content = NULL;
+        message->content_size = 0;
+      }
+      break;
+    }
+  }
+  return ret;
+}
+
+static int delete_file(struct channel *channel, const char *filename) {
+  json_array *_m = channel->messages;
+  struct message *message;
+
+  json_array_for_each(_m, message) {
+    if (STREQ(filename, message->attachment.filename)) {
+      struct response resp = {0};
+      discord_delete_messsage(channel->id.value, message->id.value, &resp);
+
+      int last_deleted_message_id = hash_string(message->id.value);
+      for (size_t i = 0; i < message->parts_n; i++) {
+        struct message *part = message->parts[i];
+        if (hash_string(part->id.value) != last_deleted_message_id) {
+          discord_delete_messsage(channel->id.value, part->id.value, &resp);
+          last_deleted_message_id = hash_string(part->id.value);
+        }
+        discord_free_message(part);
+        json_array_remove_ptr(&channel->messages, part);
+      }
+
+      discord_free_message(message);
+      json_array_remove_ptr(&channel->messages, message);
+
+      return 0;
+    }
+  }
+
+  return -EAGAIN;
 };
 
 int dcfs_rmdir(const char *path) {
   if (count_char(path, '/') != 1) {
     return -EPERM;
   }
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
+  struct dcfs_state *state = get_state();
 
   struct path p;
   path_init(path, &p);
@@ -99,7 +268,7 @@ int dcfs_rmdir(const char *path) {
   struct channel *channel;
   json_array *_ch = state->channels;
   json_array_for_each(_ch, channel) {
-    if (strcmp(path + 1, channel->name) == 0) {
+    if (STREQ(path + 1, channel->name)) {
       struct response resp = {0};
       discord_delete_channel(channel->id.value, &resp);
 
@@ -123,8 +292,7 @@ int dcfs_mkdir(const char *path, mode_t mode) {
     return -EPERM;
   }
 
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
+  struct dcfs_state *state = get_state();
 
   struct path p;
   path_init(path, &p);
@@ -150,10 +318,11 @@ int dcfs_mkdir(const char *path, mode_t mode) {
   struct channel new_channel = {
       .type = *type,
       .has_parent = *parent == JSON_NULL ? 0 : 1,
-      .name = strdup(name),
   };
 
   snowflake_init(id, &new_channel.id);
+  strcpy(new_channel.name, name);
+
   json_array_push(state->channels, &new_channel, sizeof(struct channel),
                   JSON_UNKNOWN);
   json_object_destroy(json);
@@ -197,12 +366,13 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
 #endif
 {
   int res = 0;
+
+  struct dcfs_state *state = get_state();
+
   struct path p = {0};
   path_init(path, &p);
   print_op("dcfs_getattr", &p);
 
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
   memset(stbuf, 0, sizeof(struct stat));
 
 #ifdef __APPLE__
@@ -213,7 +383,7 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
   stbuf->st_gid = getgid();
 #endif /* __APPLE__ */
 
-  if (strcmp(path, "/") == 0) {
+  if (STREQ(path, "/")) {
 #ifdef __APPLE__
     stbuf->mode = S_IFDIR | 0755;
     stbuf->size = 4096;
@@ -230,13 +400,13 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
     stbuf->st_mtim.tv_sec = GUILD_ID.timestamp;
 #endif /* __APPLE__ */
 
-    return 0;
+    return res;
 
   } else if (count_char(path, '/') == 1) {
     struct channel *channel;
     json_array *_ch = state->channels;
     json_array_for_each(_ch, channel) {
-      if (strcmp(p.dir, channel->name) == 0) {
+      if (STREQ(p.dir, channel->name)) {
         if (!channel->messages)
           channel->messages = discord_get_messages(channel->id.value);
 
@@ -264,7 +434,7 @@ int dcfs_getattr(const char *path, struct stat *stbuf,
     json_array *_m = channel->messages;
     struct message *message;
     json_array_for_each(_m, message) {
-      if (strcmp(p.filename, message->attachment.filename) == 0) {
+      if (STREQ(p.filename, message->attachment.filename)) {
 #ifdef __APPLE__
         stbuf->mode = S_IFREG | 0644;
         stbuf->size = message->attachment.size;
@@ -296,17 +466,16 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                  enum fuse_readdir_flags flags)
 #endif /* __APPLE__ */
 {
-
-  filler(buf, ".", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
-  filler(buf, "..", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
+  struct dcfs_state *state = get_state();
 
   struct path p = {0};
   path_init(path, &p);
   print_op("dcfs_readdir", &p);
 
-  if (strcmp(path, "/") == 0) {
+  filler(buf, ".", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
+  filler(buf, "..", NULL, 0, FUSE_FILL_DIR_DEFAULTS);
+
+  if (STREQ(path, "/")) {
     struct channel *channel;
     json_array *_c = state->channels;
     json_array_for_each(_c, channel) {
@@ -358,28 +527,25 @@ int dcfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
   if (count_char(path, '/') != 2) {
     return -EPERM;
   }
+  struct dcfs_state *state = get_state();
 
   struct path p;
   path_init(path, &p);
   print_op("dcfs_create", &p);
 
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
+  struct channel *channel;
+  GET_CURRENT_CHANNEL(channel);
 
   struct message message;
 
   message.content = NULL;
   message.content_size = 0;
-  message.parts = NULL;
   message.parts_n = 0;
   message.is_part = 0;
 
-  message.attachment.filename = strdup(p.filename);
+  strcpy(message.attachment.filename, p.filename);
   message.attachment.size = 0;
   message.attachment.url = NULL;
-
-  struct channel *channel;
-  GET_CURRENT_CHANNEL(channel);
 
   json_array_push(channel->messages, &message, sizeof(struct message),
                   JSON_UNKNOWN);
@@ -409,12 +575,11 @@ int dcfs_open(const char *path, struct fuse_file_info *fi) {
 int dcfs_write(const char *path, const char *buf, size_t size, off_t offset,
                struct fuse_file_info *fi) {
 
+  struct dcfs_state *state = get_state();
+
   struct path p;
   path_init(path, &p);
   print_op("dcfs_write", &p);
-
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
 
   struct channel *channel;
   GET_CURRENT_CHANNEL(channel);
@@ -422,7 +587,7 @@ int dcfs_write(const char *path, const char *buf, size_t size, off_t offset,
   struct message *message;
   json_array *_m = channel->messages;
   json_array_for_each(_m, message) {
-    if (strcmp(p.filename, message->attachment.filename) == 0) {
+    if (STREQ(p.filename, message->attachment.filename)) {
       if (message->content_size > MAX_FILESIZE) {
         return -EFBIG;
       }
@@ -460,8 +625,7 @@ int dcfs_write(const char *path, const char *buf, size_t size, off_t offset,
 
 int dcfs_read(const char *path, char *buf, size_t size, off_t offset,
               struct fuse_file_info *fi) {
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
+  struct dcfs_state *state = get_state();
 
   struct path p;
   path_init(path, &p);
@@ -473,7 +637,7 @@ int dcfs_read(const char *path, char *buf, size_t size, off_t offset,
   struct message *message;
   json_array *_m = channel->messages;
   json_array_for_each(_m, message) {
-    if (strcmp(message->attachment.filename, p.filename) == 0) {
+    if (STREQ(message->attachment.filename, p.filename)) {
       if (!message->content) {
         struct response resp = {0};
         request_get(message->attachment.url, &resp, 0);
@@ -482,6 +646,7 @@ int dcfs_read(const char *path, char *buf, size_t size, off_t offset,
 
         for (size_t i = 0; i < message->parts_n; i++) {
           struct message *part = message->parts[i];
+          print_inf("reading part: %s", part->attachment.filename);
           resp = (struct response){0};
 
           request_get(part->attachment.url, &resp, 0);
@@ -511,75 +676,8 @@ int dcfs_read(const char *path, char *buf, size_t size, off_t offset,
   return -1;
 }
 
-int upload_batch(struct channel *channel, struct message *head,
-                 struct file *files, size_t files_n) {
-  print_inf("uploading batch of %d files\n", files_n);
-  struct response resp = {0};
-  discord_create_attachments(channel->id.value, files, files_n, &resp);
-
-  if (resp.http_code != 200) {
-    print_err("failed to upload file %s. error code: %d\n",
-              head->attachment.filename, resp.http_code);
-    json_array_remove_ptr(&channel->messages, head);
-    free(resp.raw);
-
-    return -EAGAIN;
-  }
-
-  json_object *json;
-  json_load(resp.raw, (void **)&json);
-  free(resp.raw);
-
-  json_string message_id = json_object_get(json, "id");
-
-  json_object *attachment;
-  json_array *attachments = json_object_get(json, "attachments");
-  json_array_for_each(attachments, attachment) {
-    json_string filename = json_object_get(attachment, "filename");
-    json_number *size = json_object_get(attachment, "size");
-    json_string url = json_object_get(attachment, "url");
-
-    if (strcmp(filename, head->attachment.filename) == 0) {
-      snowflake_init(message_id, &head->id);
-      head->parts = malloc(10 * sizeof(void));
-      head->attachment.size = *size;
-      head->attachment.url = strdup(url);
-
-    } else {
-      struct message part_message = {
-          .is_part = 1,
-          .content = NULL,
-          .parts = NULL,
-      };
-      snowflake_init(message_id, &part_message.id);
-
-      part_message.attachment.filename = strdup(filename);
-      part_message.attachment.size = *size;
-      part_message.attachment.url = strdup(url);
-      head->attachment.size += *size;
-
-      int part_n_start = last_index(filename, 'T');
-      size_t part_n = strtol(filename + part_n_start + 1, NULL, 10);
-
-      if (head->parts_n++ <= part_n) {
-        head->parts =
-            realloc(head->parts, ((part_n / 10) + 1) * 10 * sizeof(void));
-      }
-
-      head->parts[part_n - 1] =
-          json_array_push(channel->messages, &part_message,
-                          sizeof(struct message), JSON_UNKNOWN);
-    }
-  }
-
-  json_object_destroy(json);
-  return 0;
-}
-
 int dcfs_release(const char *path, struct fuse_file_info *fi) {
-  int ret = 0;
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
+  struct dcfs_state *state = get_state();
 
   struct path p;
   path_init(path, &p);
@@ -588,58 +686,11 @@ int dcfs_release(const char *path, struct fuse_file_info *fi) {
   struct channel *channel;
   GET_CURRENT_CHANNEL(channel);
 
-  struct message *message;
-  json_array *_m = channel->messages;
-
-  json_array_for_each(_m, message) {
-    if (strcmp(message->attachment.filename, p.filename) == 0) {
-      if (!message->attachment.url && message->content) {
-        int files_n = 0;
-        struct file files[10];
-        memset(&files, 0, sizeof(files));
-
-        for (size_t offset = 0; offset < message->content_size;
-             offset += MAX_FILESIZE, files_n++) {
-          if (files_n > 0 && files_n % 10 == 0) {
-            if ((ret = upload_batch(channel, message, files, 10)) != 0)
-              goto out;
-            memset(&files, 0, sizeof(files));
-          }
-
-          struct file *file = &files[files_n % 10];
-
-          if (offset == 0) {
-            memcpy(file->filename, p.filename, strlen(p.filename));
-          } else {
-            snprintf(file->filename, sizeof(file->filename), "%s.PART%d",
-                     p.filename, files_n);
-          }
-
-          file->buffer = message->content + offset;
-          size_t remaining = message->content_size - offset;
-          file->buffer_size =
-              remaining < MAX_FILESIZE ? remaining : MAX_FILESIZE;
-
-          print_inf("file: %s %ld\n", file->filename, file->buffer_size);
-        }
-
-        if (files_n > 0) {
-          ret = upload_batch(channel, message, files, files_n % 10);
-        }
-
-      out:
-        free(message->content);
-        message->content = NULL;
-        message->content_size = 0;
-      }
-      break;
-    }
-  }
-  return ret;
+  return upload_file(channel, p.filename);
 }
+
 int dcfs_unlink(const char *path) {
-  struct fuse_context *ctx = fuse_get_context();
-  struct dcfs_state *state = ctx->private_data;
+  struct dcfs_state *state = get_state();
 
   struct path p;
   path_init(path, &p);
@@ -648,34 +699,90 @@ int dcfs_unlink(const char *path) {
   struct channel *channel;
   GET_CURRENT_CHANNEL(channel);
 
-  json_array *_m = channel->messages;
-  struct message *message;
+  return delete_file(channel, p.filename);
+}
 
-  json_array_for_each(_m, message) {
-    if (strcmp(p.filename, message->attachment.filename) == 0) {
-      struct response resp = {0};
-      discord_delete_messsage(channel->id.value, message->id.value, &resp);
+int dcfs_rename(const char *from, const char *to, unsigned int flags) {
+  int ret = 0;
+  struct dcfs_state *state = get_state();
 
-      int last_deleted_message_id = hash_string(message->id.value);
-      for (size_t i = 0; i < message->parts_n; i++) {
-        struct message *part = message->parts[i];
-        if (hash_string(part->id.value) != last_deleted_message_id) {
-          discord_delete_messsage(channel->id.value, part->id.value, &resp);
-          last_deleted_message_id = hash_string(part->id.value);
-        }
-        print_inf("trying to delete %s (%p) \n", part->attachment.filename,
-                  part);
-        discord_free_message(part);
-        json_array_remove_ptr(&channel->messages, part);
-      }
+  struct path p_from;
+  path_init(from, &p_from);
+  struct channel *old_channel = get_channel(&state->channels, &p_from);
 
-      discord_free_message(message);
-      json_array_remove_ptr(&channel->messages, message);
-      return 0;
+  struct path p_to;
+  path_init(to, &p_to);
+  struct channel *new_channel = get_channel(&state->channels, &p_to);
+
+  print_op("dcfs_rename", &p_from);
+  print_op("dcfs_rename", &p_to);
+
+  if (*p_from.dir && !*p_from.filename && *p_to.dir && !*p_to.filename) {
+    struct response resp = {0};
+    discord_rename_channel(old_channel->id.value, p_to.dir, &resp);
+
+    if (resp.http_code != 200) {
+      ret = -EAGAIN;
+      goto out;
     }
+
+    memset(old_channel->name, 0, sizeof(old_channel->name));
+    strcpy(old_channel->name, p_to.dir);
+
+  } else if (*p_from.dir && *p_from.filename && *p_to.dir && *p_to.filename) {
+    if (STREQ(p_from.dir, p_to.dir)) {
+      ret = -ENOSYS;
+      goto out;
+    }
+
+    if (!old_channel || !new_channel) {
+      ret = -ENOENT;
+      goto out;
+    }
+
+    struct message new_message;
+    new_message.parts_n = 0;
+    new_message.is_part = 0;
+
+    strcpy(new_message.attachment.filename, p_to.filename);
+    new_message.attachment.size = 0;
+    new_message.attachment.url = NULL;
+
+    struct message *old_message;
+    json_array *_old_m = old_channel->messages;
+    json_array_for_each(_old_m, old_message) {
+      if (STREQ(old_message->attachment.filename, p_from.filename)) {
+        new_message.content = malloc(old_message->attachment.size);
+        if (!new_message.content) {
+          ret = -1;
+          goto out;
+        }
+
+        int offset = 0;
+        int bytes_read = 0;
+        while ((bytes_read = dcfs_read(from, new_message.content + offset, 4096,
+                                       offset, NULL)) > 0)
+          offset += bytes_read;
+        ;
+        new_message.content_size = old_message->content_size;
+      }
+    }
+
+    if ((ret = delete_file(old_channel, p_from.filename)) != 0)
+      goto out;
+
+    struct message *tmp = json_array_push(new_channel->messages, &new_message,
+                                          sizeof(struct message), JSON_UNKNOWN);
+    print_inf("new_message %p\n", tmp);
+
+    ret = upload_file(new_channel, p_to.filename);
+
+  } else {
+    ret = -ENOTSUP;
   }
 
-  return -EAGAIN;
+out:
+  return ret;
 }
 
 void dcfs_destroy(void *data) {
@@ -687,6 +794,20 @@ void dcfs_destroy(void *data) {
 }
 
 int main(int argc, char *argv[]) {
+  program_name = argv[0];
+
+  if (get_auth_token() == NULL) {
+    print_err("DCFS_TOKEN isn't set\n");
+    return 1;
+  }
+
+  char *guild_id = get_guild_id();
+  if (!guild_id) {
+    print_err("DCFS_GUILD_ID isn't set\n");
+    return 1;
+  }
+  snowflake_init(guild_id, &GUILD_ID);
+
   struct fuse_operations operations = {
       .readdir = dcfs_readdir,
       .getattr = dcfs_getattr,
@@ -704,6 +825,7 @@ int main(int argc, char *argv[]) {
       .read = dcfs_read,
       .write = dcfs_write,
       .release = dcfs_release,
+      .rename = dcfs_rename,
       .destroy = dcfs_destroy,
 
   };
@@ -711,18 +833,6 @@ int main(int argc, char *argv[]) {
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
   struct stat stbuf;
   struct fuse_cmdline_opts opts;
-
-  if (get_auth_token() == NULL) {
-    fprintf(stderr, "DCFS_TOKEN isn't set\n");
-    return 1;
-  }
-
-  char *guild_id = get_guild_id();
-  if (!guild_id) {
-    fprintf(stderr, "DCFS_GUILD_ID isn't set\n");
-    return 1;
-  }
-  snowflake_init(guild_id, &GUILD_ID);
 
   if (fuse_parse_cmdline(&args, &opts) != 0)
     return 1;

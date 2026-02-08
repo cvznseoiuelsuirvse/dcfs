@@ -1,8 +1,5 @@
 #include "util.h"
 #include <curl/curl.h>
-#include <openssl/bio.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -91,41 +88,6 @@ void str_replace(const char *orig, char *out, size_t out_size, const char *old,
     strcpy(string, out);
   }
 };
-int handleErrors(void) {
-  ERR_print_errors_fp(stderr);
-  return -1;
-}
-
-int b64decode(const char *input, int input_len, char *output, int max_out_len) {
-  BIO *b64 = BIO_new(BIO_f_base64());
-  BIO *mem = BIO_new_mem_buf(input, input_len);
-
-  BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-
-  mem = BIO_push(b64, mem);
-
-  int decoded_len = BIO_read(mem, output, max_out_len);
-
-  BIO_free_all(mem);
-  return decoded_len;
-}
-
-int _pow(int n, int po) {
-  int ret = 1;
-  for (int i = 1; i <= po; i++) {
-    ret *= n;
-  }
-  return ret;
-}
-
-int str_to_int(const char *string, size_t string_size) {
-  int n = 0;
-  for (size_t i = 0; i < string_size; i++) {
-    char c = string[i];
-    n += (c - 48) * _pow(10, string_size - i - 1);
-  }
-  return n;
-}
 
 void print_size(float n) {
   const char *units[] = {"B", "KB", "MB", "GB", "TB"};

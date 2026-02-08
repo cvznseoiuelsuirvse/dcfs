@@ -2,6 +2,7 @@ build/
 bin/
 fuse_examples/
 mnt/
+.cache/
 .env
 .clangd
 Makefile

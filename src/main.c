@@ -62,16 +62,14 @@ static inline struct dcfs_state *get_state() {
   return (fuse_get_context())->private_data;
 };
 
-static inline struct channel *get_channel(json_array **channels,
+static inline struct channel *get_channel(json_array *channels,
                                           struct path *path) {
-  json_array *_c = *channels;
   struct channel *_ch;
-  json_array_for_each(_c, _ch) {
+  json_array_for_each(channels, _ch) {
     if (STREQ(_ch->name, path->dir)) {
       return _ch;
     }
   }
-
   return NULL;
 }
 
@@ -708,11 +706,11 @@ int dcfs_rename(const char *from, const char *to, unsigned int flags) {
 
   struct path p_from;
   path_init(from, &p_from);
-  struct channel *old_channel = get_channel(&state->channels, &p_from);
+  struct channel *old_channel = get_channel(state->channels, &p_from);
 
   struct path p_to;
   path_init(to, &p_to);
-  struct channel *new_channel = get_channel(&state->channels, &p_to);
+  struct channel *new_channel = get_channel(state->channels, &p_to);
 
   print_op("dcfs_rename", &p_from);
   print_op("dcfs_rename", &p_to);

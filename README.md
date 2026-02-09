@@ -26,10 +26,10 @@ meson compile -C build
 
 2. Mount the filesystem:
    ```bash
+   # Linux
    ./bin/dcfs MOUNTPOINT OPTIONS
-   ```
-or (Macos)
-   ```bash
+
+   # MacOS
    ./bin/dcfs MOUNTPOINT -o noappledouble OPTIONS
    ```
 

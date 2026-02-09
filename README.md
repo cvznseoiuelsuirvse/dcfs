@@ -41,7 +41,7 @@ or (Macos)
 - Basic file operations (read, write, rename, delete)
 
 ## Demo
-[![Demo]](https://raw.githubusercontent.com/cvznseoiuelsuirvse/dcfs/asset/demo.mp4)
+[![Demo](https://github.com/cvznseoiuelsuirvse/dcfs/raw/refs/heads/main/asset/demo.mp4)](https://github.com/cvznseoiuelsuirvse/dcfs/raw/refs/heads/main/asset/demo.mp4)
 
 Chunked file handling (MAX_FILESIZE 256)
-[![Demo1]](https://raw.githubusercontent.com/cvznseoiuelsuirvse/dcfs/asset/demo1.mp4)
+[![Demo1](https://github.com/cvznseoiuelsuirvse/dcfs/raw/refs/heads/main/asset/demo1.mp4)](https://github.com/cvznseoiuelsuirvse/dcfs/raw/refs/heads/main/asset/demo1.mp4)

@@ -13,21 +13,15 @@
 #define MAX_PARTS 256
 
 struct snowflake {
-  time_t timestamp;
-  uint8_t internal_worker_id;
-  uint8_t internal_process_id;
-  uint16_t increment;
-  char value[40];
+  size_t timestamp;
+  char value[64];
 };
 
 inline static void snowflake_init(const char *ts, struct snowflake *snowflake) {
+  memset(snowflake, 0, sizeof(struct snowflake));
   uint64_t n = strtoll(ts, NULL, 10);
   snowflake->timestamp = ((n >> 22) + 1420070400000) / 1000;
-  snowflake->internal_worker_id = (n & 0x3E0000) >> 17;
-  snowflake->internal_process_id = (n & 0x1F000) >> 12;
-  snowflake->increment = n & 0xFFF;
-  memset(snowflake->value, 0, sizeof(snowflake->value));
-  memcpy(snowflake->value, ts, strlen(ts));
+  strcpy(snowflake->value, ts);
 }
 
 struct attachment {

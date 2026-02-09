@@ -5,6 +5,10 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 struct repl_t {
   const char *old;
   const char *new;
@@ -72,7 +76,7 @@ static int is_b64_valid(char c) {
   return 0;
 }
 
-int b64encode(const char *in, char *out, size_t out_len) {
+int b64encode(char *out, const char *in, size_t out_len) {
   size_t in_offset = 0;
   size_t out_offset = 0;
   size_t in_len = strlen(in);
@@ -96,7 +100,7 @@ int b64encode(const char *in, char *out, size_t out_len) {
   return 0;
 }
 
-int b64decode(const char *in, char *out, size_t out_len) {
+int b64decode(char *out, const char *in, size_t out_len) {
   size_t in_offset = 0;
   size_t out_offset = 0;
   size_t in_len = strlen(in);
@@ -145,11 +149,28 @@ int last_index(const char *string, char c) {
   return idx;
 }
 
-int hash_string(const char *string) {
+int string_hash(const char *string) {
   int hash = 5381;
   int c;
   while ((c = *string++))
     hash = ((hash << 5) + hash) + c;
 
   return hash;
+}
+
+void string_normalize(char *out, const char *in, size_t out_len) {
+#ifdef __APPLE__
+  CFStringRef cfStringRef =
+      CFStringCreateWithCString(kCFAllocatorDefault, in, kCFStringEncodingUTF8);
+  CFMutableStringRef cfMutable =
+      CFStringCreateMutableCopy(NULL, 0, cfStringRef);
+
+  CFStringNormalize(cfMutable, kCFStringNormalizationFormC);
+  CFStringGetCString(cfMutable, out, out_len, kCFStringEncodingUTF8);
+
+  CFRelease(cfStringRef);
+  CFRelease(cfMutable);
+#else
+  strcpy(out, in);
+#endif
 }

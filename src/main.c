@@ -45,15 +45,19 @@ struct dcfs_state {
 static void path_init(const char *path, struct path *p) {
   memset(p, 0, sizeof(struct path));
 
-  if (!STREQ(path, "/")) {
-    int last_slash_idx = last_index(path, '/');
+  char path_normalized[256];
+  memset(path_normalized, 0, sizeof(path_normalized));
+  string_normalize(path_normalized, path, sizeof(path_normalized));
+
+  if (!STREQ(path_normalized, "/")) {
+    int last_slash_idx = last_index(path_normalized, '/');
 
     if (last_slash_idx > 0) {
-      memcpy(p->dir, path + 1, last_slash_idx - 1);
-      memcpy(p->filename, path + (last_slash_idx + 1),
-             strlen(path) - last_slash_idx);
+      memcpy(p->dir, path_normalized + 1, last_slash_idx - 1);
+      memcpy(p->filename, path_normalized + (last_slash_idx + 1),
+             strlen(path_normalized) - last_slash_idx);
     } else {
-      memcpy(p->dir, path + 1, strlen(path) - 1);
+      memcpy(p->dir, path_normalized + 1, strlen(path_normalized) - 1);
     }
   }
 }
@@ -78,7 +82,7 @@ static void print_err(const char *format, ...) {
   va_start(list, format);
 
   fprintf(stderr, "%s: \033[31;1mERROR\033[0m ", program_name);
-  vfprintf(stderr, format, list);
+  fprintf(stderr, format, list);
 
   va_end(list);
 }
@@ -127,32 +131,36 @@ static int process_files(struct channel *channel, struct message *head,
   json_object *attachment;
   json_array *attachments = json_object_get(json, "attachments");
   json_array_for_each(attachments, attachment) {
+    char decoded_filename[256];
+    memset(decoded_filename, 0, sizeof(decoded_filename));
+
     json_string filename = json_object_get(attachment, "filename");
     json_number *size = json_object_get(attachment, "size");
     json_string url = json_object_get(attachment, "url");
 
-    if (STREQ(filename, head->attachment.filename)) {
+    assert(b64decode(decoded_filename, filename, sizeof(decoded_filename)) ==
+           0);
+
+    if (STREQ(decoded_filename, head->attachment.filename)) {
       snowflake_init(message_id, &head->id);
+
       head->attachment.size = *size;
       head->attachment.url = strdup(url);
 
     } else {
-      struct message part_message = {
-          .is_part = 1,
-          .content = NULL,
-      };
+      struct message part_message;
+      memset(&part_message, 0, sizeof(struct message));
+
       snowflake_init(message_id, &part_message.id);
 
-      memset(part_message.attachment.filename, 0,
-             sizeof(part_message.attachment.filename));
-      assert(b64decode(filename, part_message.attachment.filename,
-                       sizeof(part_message.attachment.filename)) == 0);
+      strcpy(part_message.attachment.filename, decoded_filename);
       part_message.attachment.size = *size;
       part_message.attachment.url = strdup(url);
+      part_message.is_part = 1;
       head->attachment.size += *size;
 
-      int part_n_start = last_index(filename, 'T');
-      size_t part_n = strtol(filename + part_n_start + 1, NULL, 10);
+      int part_n_start = last_index(decoded_filename, 'T');
+      size_t part_n = strtol(decoded_filename + part_n_start + 1, NULL, 10);
 
       head->parts[part_n - 1] =
           json_array_push(channel->messages, &part_message,
@@ -195,17 +203,15 @@ static int upload_file(struct channel *channel, const char *filename) {
 
           struct file *file = &files[files_n % 10];
 
-          print_inf("uploading file %s\n", filename);
           memset(file->filename, 0, sizeof(file->filename));
           if (offset == 0) {
-            b64encode(filename, file->filename, sizeof(file->filename));
+            b64encode(file->filename, filename, sizeof(file->filename));
           } else {
             char tmp_filename[256];
             snprintf(tmp_filename, sizeof(tmp_filename), "%s.PART%d", filename,
                      files_n);
-            b64encode(tmp_filename, file->filename, sizeof(file->filename));
+            b64encode(file->filename, tmp_filename, sizeof(file->filename));
           }
-          print_inf("encoded %s\n", file->filename);
 
           file->buffer = message->content + offset;
           size_t remaining = message->content_size - offset;
@@ -237,12 +243,12 @@ static int delete_file(struct channel *channel, const char *filename) {
       struct response resp = {0};
       discord_delete_messsage(channel->id.value, message->id.value, &resp);
 
-      int last_deleted_message_id = hash_string(message->id.value);
+      int last_deleted_message_id = string_hash(message->id.value);
       for (size_t i = 0; i < message->parts_n; i++) {
         struct message *part = message->parts[i];
-        if (hash_string(part->id.value) != last_deleted_message_id) {
+        if (string_hash(part->id.value) != last_deleted_message_id) {
           discord_delete_messsage(channel->id.value, part->id.value, &resp);
-          last_deleted_message_id = hash_string(part->id.value);
+          last_deleted_message_id = string_hash(part->id.value);
         }
         discord_free_message(part);
         json_array_remove_ptr(&channel->messages, part);
@@ -276,8 +282,8 @@ int dcfs_rmdir(const char *path) {
       discord_delete_channel(channel->id.value, &resp);
 
       if (resp.http_code != 200) {
-        fprintf(stderr, "failed to delete %s channel. http code: %ld\n",
-                channel->name, resp.http_code);
+        print_err("failed to delete %s channel. http code: %ld\n",
+                  channel->name, resp.http_code);
         return -EAGAIN;
       }
 
@@ -305,8 +311,8 @@ int dcfs_mkdir(const char *path, mode_t mode) {
   discord_create_channel(GUILD_ID.value, path + 1, &resp);
 
   if (resp.http_code != 201) {
-    fprintf(stderr, "failed to create a new channel. http_code: %ld\n",
-            resp.http_code);
+    print_err("failed to create a new channel. http_code: %ld\n",
+              resp.http_code);
     return -EAGAIN;
   }
 
@@ -338,24 +344,12 @@ int dcfs_getxattr(const char *path, const char *name, char *value, size_t size,
                   uint32_t flags) {
   return 0;
 }
-#else
-int dcfs_getxattr(const char *path, const char *name, char *value,
-                  size_t size) {
-  return 0;
-}
 
-#endif
-
-#ifdef __APPLE__
 int dcfs_setxattr(const char *path, const char *name, const char *value,
                   size_t size, int flags, uint32_t position) {
   return 0;
 }
-#else
-int dcfs_setxattr(const char *path, const char *name, const char *value,
-                  size_t size, int flags) {
-  return 0;
-}
+
 #endif /* __APPLE__ */
 
 #ifdef __APPLE__
@@ -498,8 +492,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     if (!channel->messages) {
       channel->messages = discord_get_messages(channel->id.value);
       if (!channel->messages) {
-        fprintf(stderr, "failed to get %s channel messages\n",
-                channel->id.value);
+        print_err("failed to get %s channel messages\n", channel->id.value);
         return -ENOENT;
       }
     }
@@ -538,15 +531,8 @@ int dcfs_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
   GET_CURRENT_CHANNEL(channel);
 
   struct message message;
-
-  message.content = NULL;
-  message.content_size = 0;
-  message.parts_n = 0;
-  message.is_part = 0;
-
+  memset(&message, 0, sizeof(struct message));
   strcpy(message.attachment.filename, p.filename);
-  message.attachment.size = 0;
-  message.attachment.url = NULL;
 
   json_array_push(channel->messages, &message, sizeof(struct message),
                   JSON_UNKNOWN);
@@ -742,12 +728,8 @@ int dcfs_rename(const char *from, const char *to, unsigned int flags) {
     }
 
     struct message new_message;
-    new_message.parts_n = 0;
-    new_message.is_part = 0;
-
+    memset(&new_message, 0, sizeof(struct message));
     strcpy(new_message.attachment.filename, p_to.filename);
-    new_message.attachment.size = 0;
-    new_message.attachment.url = NULL;
 
     struct message *old_message;
     json_array *_old_m = old_channel->messages;
@@ -814,8 +796,10 @@ int main(int argc, char *argv[]) {
       .getattr = dcfs_getattr,
       .chown = dcfs_chown,
       .chmod = dcfs_chmod,
+#ifdef __APPLE__
       .getxattr = dcfs_getxattr,
       .setxattr = dcfs_setxattr,
+#endif /* __APPLE__ */
       .mkdir = dcfs_mkdir,
       .rmdir = dcfs_rmdir,
       .unlink = dcfs_unlink,
@@ -838,13 +822,13 @@ int main(int argc, char *argv[]) {
   fuse_opt_free_args(&args);
 
   if (!opts.mountpoint) {
-    fprintf(stderr, "missing mountpoint parameter\n");
+    print_err("missing mountpoint parameter\n");
     return 1;
   }
 
   if (stat(opts.mountpoint, &stbuf) == -1) {
-    fprintf(stderr, "failed to access mountpoint %s: %s\n", opts.mountpoint,
-            strerror(errno));
+    print_err("failed to access mountpoint %s: %s\n", opts.mountpoint,
+              strerror(errno));
     free(opts.mountpoint);
     return 1;
   }

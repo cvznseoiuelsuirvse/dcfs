@@ -86,20 +86,16 @@ static json_array *discord_get_all_messages(const char *channel_id) {
       json_array *attachments = json_object_get(o, "attachments");
       json_array_for_each(attachments, attachment) {
         struct message message;
+        memset(&message, 0, sizeof(struct message));
+
         snowflake_init(message_id, &message.id);
-        message.content = NULL;
-        message.parts_n = 0;
-        message.is_part = 0;
 
         json_string filename = json_object_get(attachment, "filename");
         json_number *size = json_object_get(attachment, "size");
         json_string url = json_object_get(attachment, "url");
 
-        memset(message.attachment.filename, 0,
-               sizeof(message.attachment.filename));
-        assert(b64decode(filename, message.attachment.filename,
+        assert(b64decode(message.attachment.filename, filename,
                          sizeof(message.attachment.filename)) == 0);
-        printf("%s\n", message.attachment.filename);
         message.attachment.size = *size;
         message.attachment.url = strdup(url);
         json_array_push(messages, &message, sizeof(struct message),

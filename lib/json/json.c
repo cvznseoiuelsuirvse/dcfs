@@ -185,7 +185,7 @@ void json_object_destroy(json_object *object) {
 }
 
 void *json_object_get(json_object *object, const char *key) {
-  size_t n = hash_string(key) % object->size;
+  size_t n = string_hash(key) % object->size;
   json_object_bucket *bucket = object->buckets[n];
 
   if (bucket != NULL) {
@@ -201,7 +201,7 @@ void *json_object_get(json_object *object, const char *key) {
 
 void *json_object_set(json_object *object, json_string key, void *value,
                       size_t value_size, json_value_type type) {
-  size_t n = hash_string(key) % object->size;
+  size_t n = string_hash(key) % object->size;
 
   json_object_bucket *new_bucket = malloc(sizeof(json_object_bucket));
   if (new_bucket == NULL) {

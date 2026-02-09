@@ -9,11 +9,12 @@ size_t get_filesize(const char *path);
 char *get_auth_token();
 char *get_guild_id();
 
-int b64encode(const char *in, char *out, size_t out_len);
-int b64decode(const char *in, char *out, size_t out_len);
+int b64encode(char *out, const char *in, size_t out_len);
+int b64decode(char *out, const char *in, size_t out_len);
 
 int count_char(const char *string, char c);
 int last_index(const char *string, char c);
-int hash_string(const char *string);
+int string_hash(const char *string);
+void string_normalize(char *out, const char *in, size_t out_len);
 
 #endif

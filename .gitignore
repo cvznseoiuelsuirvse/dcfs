@@ -2,6 +2,7 @@ build/
 bin/
 fuse_examples/
 mnt/
+sshfs/
 .cache/
 .env
 .clangd

@@ -37,12 +37,7 @@ static struct curl_slist *append_auth_header(struct curl_slist *headers) {
 }
 
 int request_get(const char *url, struct response *resp, char user_auth) {
-  CURLcode res;
-
-  res = curl_global_init(CURL_GLOBAL_ALL);
-  if (res)
-    return res;
-
+  CURLcode res = 0;
   CURL *curl = curl_easy_init();
   if (curl) {
     struct curl_slist *headers = NULL;
@@ -71,18 +66,12 @@ int request_get(const char *url, struct response *resp, char user_auth) {
     curl_easy_cleanup(curl);
   }
 
-  curl_global_cleanup();
   return res;
 }
 
 int request_post_files(const char *url, const struct file *files,
                        size_t files_n, struct response *resp) {
-  CURLcode res;
-
-  res = curl_global_init(CURL_GLOBAL_ALL);
-  if (res)
-    return res;
-
+  CURLcode res = 0;
   CURL *curl = curl_easy_init();
   if (curl) {
     curl_mime *form = curl_mime_init(curl);
@@ -117,18 +106,12 @@ int request_post_files(const char *url, const struct file *files,
     curl_easy_cleanup(curl);
   }
 
-  curl_global_cleanup();
   return res;
 }
 
 int request_post(const char *url, char *data, struct response *resp,
                  char user_auth) {
-  CURLcode res;
-
-  res = curl_global_init(CURL_GLOBAL_ALL);
-  if (res)
-    return res;
-
+  CURLcode res = 0;
   CURL *curl = curl_easy_init();
   if (curl) {
     struct curl_slist *headers = NULL;
@@ -157,18 +140,12 @@ int request_post(const char *url, char *data, struct response *resp,
     curl_easy_cleanup(curl);
   }
 
-  curl_global_cleanup();
   return res;
 }
 
 int request_patch(const char *url, char *data, struct response *resp,
                   char user_auth) {
-  CURLcode res;
-
-  res = curl_global_init(CURL_GLOBAL_ALL);
-  if (res)
-    return res;
-
+  CURLcode res = 0;
   CURL *curl = curl_easy_init();
   if (curl) {
     struct curl_slist *headers = NULL;
@@ -196,17 +173,11 @@ int request_patch(const char *url, char *data, struct response *resp,
     curl_easy_cleanup(curl);
   }
 
-  curl_global_cleanup();
   return res;
 }
 
 int request_delete(const char *url, struct response *resp, char user_auth) {
-  CURLcode res;
-
-  res = curl_global_init(CURL_GLOBAL_ALL);
-  if (res)
-    return res;
-
+  CURLcode res = 0;
   CURL *curl = curl_easy_init();
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -229,6 +200,5 @@ int request_delete(const char *url, struct response *resp, char user_auth) {
     curl_easy_cleanup(curl);
   }
 
-  curl_global_cleanup();
   return res;
 }

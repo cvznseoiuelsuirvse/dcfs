@@ -81,8 +81,8 @@ static void print_err(const char *format, ...) {
   va_list list;
   va_start(list, format);
 
-  fprintf(stderr, "%s: \033[31;1mERROR\033[0m ", program_name);
-  fprintf(stderr, format, list);
+  fprintf(stderr, "%s: \033[31;1mERR\033[0m ", program_name);
+  vfprintf(stderr, format, list);
 
   va_end(list);
 }
@@ -92,6 +92,16 @@ static void print_inf(const char *format, ...) {
   va_start(list, format);
 
   printf("%s \033[34;1mINFO\033[0m ", program_name);
+  vprintf(format, list);
+
+  va_end(list);
+}
+
+static void print_warn(const char *format, ...) {
+  va_list list;
+  va_start(list, format);
+
+  printf("%s \033[33;1mWARN\033[0m ", program_name);
   vprintf(format, list);
 
   va_end(list);
@@ -768,15 +778,13 @@ out:
   return ret;
 }
 
-void dcfs_destroy(void *data) {
-  struct dcfs_state *state = data;
-  print_inf("dcfs_destroy\n");
-
-  if (state->channels)
-    discord_free_channels(state->channels);
-}
-
 int main(int argc, char *argv[]) {
+  int res;
+  struct fuse *fuse;
+  struct fuse_session *se;
+  struct stat stbuf;
+  struct fuse_cmdline_opts opts;
+
   program_name = argv[0];
 
   if (get_auth_token() == NULL) {
@@ -809,17 +817,17 @@ int main(int argc, char *argv[]) {
       .write = dcfs_write,
       .release = dcfs_release,
       .rename = dcfs_rename,
-      .destroy = dcfs_destroy,
 
   };
 
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-  struct stat stbuf;
-  struct fuse_cmdline_opts opts;
-
   if (fuse_parse_cmdline(&args, &opts) != 0)
     return 1;
-  fuse_opt_free_args(&args);
+
+  if (opts.show_help) {
+    fuse_lib_help(&args);
+    return 0;
+  }
 
   if (!opts.mountpoint) {
     print_err("missing mountpoint parameter\n");
@@ -832,14 +840,61 @@ int main(int argc, char *argv[]) {
     free(opts.mountpoint);
     return 1;
   }
-  free(opts.mountpoint);
+
+  if ((res = fuse_daemonize(opts.foreground)) == -1) {
+    print_err("failed to fuse_daemonize\n");
+    goto out4;
+  }
 
   struct dcfs_state state = {0};
+  fuse = fuse_new(&args, &operations, sizeof(struct fuse_operations), &state);
+  se = fuse_get_session(fuse);
+
+  if ((res = fuse_set_signal_handlers(se)) != 0)
+    goto out3;
+
+  char *real_mountpoint = realpath(opts.mountpoint, NULL);
+  if ((res = fuse_mount(fuse, real_mountpoint)) != 0) {
+    print_err("failed to fuse_mount\n");
+    goto out2;
+  }
+
+  if ((res = fcntl(fuse_session_fd(se), F_SETFD, FD_CLOEXEC)) == -1) {
+    perror("fcntl");
+    print_warn("failed to set FD_CLOEXEC on fuse device\n");
+  };
+
+  if ((res = curl_global_init(CURL_GLOBAL_ALL)) != 0) {
+    print_err("failed to curl_global_init\n");
+    goto out1;
+  }
+
   state.channels = discord_get_channels(GUILD_ID.value);
   if (!state.channels) {
     print_err("failed to get channels of guild %s\n", GUILD_ID.value);
-    return 1;
+    goto out1;
   }
 
-  return fuse_main(argc, argv, &operations, &state);
+  if (opts.singlethread)
+    res = fuse_loop(fuse);
+  else
+    res = fuse_loop_mt(fuse, 0);
+
+out1:
+  curl_global_cleanup();
+  fuse_unmount(fuse);
+  fuse_remove_signal_handlers(se);
+
+out2:
+  free(real_mountpoint);
+
+out3:
+  discord_free_channels(state.channels);
+  fuse_destroy(fuse);
+
+out4:
+  fuse_opt_free_args(&args);
+  free(opts.mountpoint);
+
+  return res;
 }

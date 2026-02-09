@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef DCFS_UTIL_H
+#define DCFS_UTIL_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -9,11 +9,8 @@ size_t get_filesize(const char *path);
 char *get_auth_token();
 char *get_guild_id();
 
-void str_replace(const char *orig, char *out, size_t out_size, const char *old,
-                 const char *new);
-
-int str_to_int(const char *string, size_t string_size);
-void print_size(float n);
+int b64encode(const char *in, char *out, size_t out_len);
+int b64decode(const char *in, char *out, size_t out_len);
 
 int count_char(const char *string, char c);
 int last_index(const char *string, char c);

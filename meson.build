@@ -32,6 +32,6 @@ executable('dcfs',
   src_files,
   lib_files,
   include_directories: inc_dirs,
-  dependencies: [libcurl_dep, fuse3_dep, zlib_dep],
+  dependencies: [libcurl_dep, fuse3_dep],
   install: true,
 )

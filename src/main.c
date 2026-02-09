@@ -143,7 +143,10 @@ static int process_files(struct channel *channel, struct message *head,
       };
       snowflake_init(message_id, &part_message.id);
 
-      strcpy(part_message.attachment.filename, filename);
+      memset(part_message.attachment.filename, 0,
+             sizeof(part_message.attachment.filename));
+      assert(b64decode(filename, part_message.attachment.filename,
+                       sizeof(part_message.attachment.filename)) == 0);
       part_message.attachment.size = *size;
       part_message.attachment.url = strdup(url);
       head->attachment.size += *size;
@@ -180,13 +183,10 @@ static int upload_file(struct channel *channel, const char *filename) {
           ret = -EFBIG;
           goto out;
         }
-        print_inf("uploading %s %d (%p)\n", filename, message->content_size,
-                  message);
 
         for (size_t offset = 0; offset < message->content_size;
              offset += MAX_FILESIZE, files_n++) {
 
-          print_inf("uploading %s offset: %ld\n", filename, offset);
           if (files_n > 0 && files_n % 10 == 0) {
             if ((ret = process_files(channel, message, files, 10)) != 0)
               goto out;
@@ -195,12 +195,17 @@ static int upload_file(struct channel *channel, const char *filename) {
 
           struct file *file = &files[files_n % 10];
 
+          print_inf("uploading file %s\n", filename);
+          memset(file->filename, 0, sizeof(file->filename));
           if (offset == 0) {
-            memcpy(file->filename, filename, strlen(filename));
+            b64encode(filename, file->filename, sizeof(file->filename));
           } else {
-            snprintf(file->filename, sizeof(file->filename), "%s.PART%d",
-                     filename, files_n);
+            char tmp_filename[256];
+            snprintf(tmp_filename, sizeof(tmp_filename), "%s.PART%d", filename,
+                     files_n);
+            b64encode(tmp_filename, file->filename, sizeof(file->filename));
           }
+          print_inf("encoded %s\n", file->filename);
 
           file->buffer = message->content + offset;
           size_t remaining = message->content_size - offset;
@@ -328,7 +333,6 @@ int dcfs_mkdir(const char *path, mode_t mode) {
   return 0;
 };
 
-#ifdef HAS_SETXATTR
 #ifdef __APPLE__
 int dcfs_getxattr(const char *path, const char *name, char *value, size_t size,
                   uint32_t flags) {
@@ -353,7 +357,6 @@ int dcfs_setxattr(const char *path, const char *name, const char *value,
   return 0;
 }
 #endif /* __APPLE__ */
-#endif
 
 #ifdef __APPLE__
 int dcfs_getattr(const char *path, struct fuse_darwin_attr *stbuf,
@@ -811,10 +814,8 @@ int main(int argc, char *argv[]) {
       .getattr = dcfs_getattr,
       .chown = dcfs_chown,
       .chmod = dcfs_chmod,
-#ifdef HAS_SETXATTR
       .getxattr = dcfs_getxattr,
       .setxattr = dcfs_setxattr,
-#endif
       .mkdir = dcfs_mkdir,
       .rmdir = dcfs_rmdir,
       .unlink = dcfs_unlink,

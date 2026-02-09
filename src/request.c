@@ -45,14 +45,20 @@ int request_get(const char *url, struct response *resp, char user_auth) {
 
   CURL *curl = curl_easy_init();
   if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(
+        headers, "Content-Type: application/json; charset=utf-8");
+    headers =
+        curl_slist_append(headers, "Accept: application/json; charset=utf-8");
 
     if (user_auth != 0) {
-      struct curl_slist *headers = append_auth_header(NULL);
-      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+      headers = append_auth_header(headers);
     }
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
@@ -126,8 +132,10 @@ int request_post(const char *url, char *data, struct response *resp,
   CURL *curl = curl_easy_init();
   if (curl) {
     struct curl_slist *headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    headers = curl_slist_append(headers, "Accept: application/json");
+    headers = curl_slist_append(
+        headers, "Content-Type: application/json; charset=utf-8");
+    headers =
+        curl_slist_append(headers, "Accept: application/json; charset=utf-8");
 
     if (user_auth != 0) {
       headers = append_auth_header(headers);

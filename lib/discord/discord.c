@@ -1,6 +1,8 @@
 #include "discord.h"
 #include "api.h"
+#include "util.h"
 
+#include <assert.h>
 #include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,7 +95,11 @@ static json_array *discord_get_all_messages(const char *channel_id) {
         json_number *size = json_object_get(attachment, "size");
         json_string url = json_object_get(attachment, "url");
 
-        strcpy(message.attachment.filename, filename);
+        memset(message.attachment.filename, 0,
+               sizeof(message.attachment.filename));
+        assert(b64decode(filename, message.attachment.filename,
+                         sizeof(message.attachment.filename)) == 0);
+        printf("%s\n", message.attachment.filename);
         message.attachment.size = *size;
         message.attachment.url = strdup(url);
         json_array_push(messages, &message, sizeof(struct message),

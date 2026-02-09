@@ -1,4 +1,5 @@
 #include "util.h"
+
 #include <curl/curl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +8,18 @@
 struct repl_t {
   const char *old;
   const char *new;
+};
+
+static const char b64charset[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+static int b64inv[] = {
+    17,  0,   0,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,
+    0,   0,   0,   0,   0,   0,   0,   -65, -65, -65, -65, -65, -65,
+    -65, -65, -65, -65, -65, -65, -65, -65, -65, -65, -65, -65, -65,
+    -65, -65, -65, -65, -65, -65, -65, 0,   0,   0,   0,   -32, 0,
+    -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71,
+    -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71,
 };
 
 void print_buffer(char *buffer, size_t buffer_len) {
@@ -52,55 +65,67 @@ char *get_guild_id() {
   return value;
 }
 
-void str_replace(const char *orig, char *out, size_t out_size, const char *old,
-                 const char *new) {
+static int is_b64_valid(char c) {
+  if (c == 45 || c == 95 || (47 < c && c < 58) || (64 < c && c < 91) ||
+      (96 < c && c < 123))
+    return 1;
+  return 0;
+}
 
-  if (out_size <= strlen(orig)) {
-    fprintf(stderr, "out must be longer than orig\n");
-    return;
+int b64encode(const char *in, char *out, size_t out_len) {
+  size_t in_offset = 0;
+  size_t out_offset = 0;
+  size_t in_len = strlen(in);
+
+  for (; in_offset < in_len; in_offset += 3, out_offset += 4) {
+    if (out_offset + 3 >= out_len)
+      return 1;
+
+    int remaining = in_len - in_offset;
+    uint32_t v = (uint8_t)in[in_offset] << 16 |
+                 (remaining > 1 ? (uint8_t)in[in_offset + 1] << 8 : 0) |
+                 (remaining > 2 ? (uint8_t)in[in_offset + 2] : 0);
+
+    for (int i = 0; i < 4; i++) {
+      if (remaining > (i - 1)) {
+        int b64idx = (v >> ((3 - i) * 6)) & 0x3f;
+        out[out_offset + i] = b64charset[b64idx];
+      }
+    }
   }
+  return 0;
+}
 
-  char string[out_size];
-  strcpy(string, orig);
+int b64decode(const char *in, char *out, size_t out_len) {
+  size_t in_offset = 0;
+  size_t out_offset = 0;
+  size_t in_len = strlen(in);
 
-  const char *pos;
-  while ((pos = strstr(string, old))) {
-    size_t offset = pos - string;
-    size_t new_i = 0;
+  for (; in_offset < in_len; in_offset += 4, out_offset += 3) {
+    if (out_offset + 2 >= out_len) {
+      return 1;
+    }
 
-    for (size_t old_i = 0; old_i < strlen(string);) {
-      char c = string[old_i];
+    int remaining = in_len - in_offset;
+    uint32_t v = 0;
 
-      if (old_i == offset) {
-        strcpy(out + new_i, new);
-
-        old_i += strlen(old);
-        new_i += strlen(new);
-
-      } else {
-        out[new_i] = c;
-        new_i++;
-        old_i++;
+    for (int i = 0; i < 4; i++) {
+      if (remaining > i) {
+        uint8_t c = (uint8_t)in[in_offset + i];
+        if (!is_b64_valid(c))
+          return 1;
+        v |= (uint8_t)(c + b64inv[c - 45]) << ((3 - i) * 6);
       }
     }
 
-    out[new_i] = 0;
-    strcpy(string, out);
-  }
-};
-
-void print_size(float n) {
-  const char *units[] = {"B", "KB", "MB", "GB", "TB"};
-  for (size_t i = 0; i < 5; i++) {
-    if (n < 1024) {
-      const char *unit = units[i];
-      char buffer[9];
-      snprintf(buffer, 9, "%.2f%s", n, unit);
-      printf("%9s", buffer);
-      return;
+    for (int i = 0; i < 3; i++) {
+      if (remaining > (i - 1)) {
+        uint8_t c = (v >> ((2 - i) * 8));
+        out[out_offset + i] = c;
+      }
     }
-    n /= 1024;
   }
+  return 0;
 }
 
 int count_char(const char *string, char c) {

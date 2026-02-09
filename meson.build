@@ -1,4 +1,5 @@
 project('dcfs', 'c',
+  meson_version: '>=1.1',
   default_options: [
     'warning_level=2',
     'buildtype=debugoptimized',
@@ -7,9 +8,16 @@ project('dcfs', 'c',
 
 cc = meson.get_compiler('c')
 
-libcurl_dep = dependency('libcurl')
-fuse3_dep = dependency('fuse3')
-zlib_dep = dependency('zlib')
+deps = [
+  dependency('libcurl'), 
+  dependency('fuse3'), 
+  dependency('zlib')
+]
+
+if build_machine.system() == 'darwin'
+  deps += dependency('CoreFoundation')
+endif
+
 
 add_project_arguments('-DMAX_FILESIZE=' + get_option('max_filesize').to_string(), language: 'c')
 
@@ -32,6 +40,7 @@ executable('dcfs',
   src_files,
   lib_files,
   include_directories: inc_dirs,
-  dependencies: [libcurl_dep, fuse3_dep],
+  dependencies: deps,
+  c_args: ['-Wno-unused-parameter'],
   install: true,
 )

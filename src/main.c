@@ -12,6 +12,7 @@
 #include <curl/curl.h>
 #include <errno.h>
 
+#define DCFS_UNUSED __attribute__((unused))
 #define STREQ(s1, s2) (strcmp((s1), (s2)) == 0)
 #define CHECK_NULL(o, code)                                                    \
   if (!(o))                                                                    \
@@ -89,7 +90,7 @@ static void print_err(const char *format, ...) {
   va_end(list);
 }
 
-static void print_inf(const char *format, ...) {
+DCFS_UNUSED static void print_inf(const char *format, ...) {
   va_list list;
   va_start(list, format);
 
@@ -813,7 +814,7 @@ int main(int argc, char *argv[]) {
 
   program_name = argv[0];
 
-  if (get_auth_token() == NULL) {
+  if (!get_auth_token()) {
     print_err("DCFS_TOKEN isn't set\n");
     return 1;
   }

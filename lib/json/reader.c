@@ -102,7 +102,7 @@ static json_array *json_parse_array(const char *blob, size_t *offset) {
     } else if (c == '{') {
       (*offset)++;
       json_object *value = json_parse_object(blob, offset);
-      if (value == NULL) {
+      if (!value) {
         json_array_destroy(array);
         fprintf(stderr, "failed to parse object starting at %ld\n", *offset);
         return NULL;
@@ -112,7 +112,7 @@ static json_array *json_parse_array(const char *blob, size_t *offset) {
     } else if (c == '[') {
       (*offset)++;
       json_array *value = json_parse_array(blob, offset);
-      if (value == NULL) {
+      if (!value) {
         json_array_destroy(array);
         fprintf(stderr, "failed to parse array starting at %ld\n", *offset);
         return NULL;
@@ -121,7 +121,7 @@ static json_array *json_parse_array(const char *blob, size_t *offset) {
 
     } else if (c == 'n' || c == 'f' || c == 't') {
       json_word value = json_parse_word(blob, offset);
-      if (value == 0) {
+      if (!value) {
         json_array_destroy(array);
         fprintf(stderr, "failed to parse word starting at %ld\n", *offset);
         return NULL;
@@ -143,8 +143,8 @@ static json_array *json_parse_array(const char *blob, size_t *offset) {
 
 static json_object *json_parse_object(const char *blob, size_t *offset) {
   size_t blob_size = strlen(blob);
-  json_object *object = json_object_new(128);
-  if (object == NULL)
+  json_object *object = json_object_new();
+  if (!object)
     return NULL;
 
   char key[1024];
@@ -211,7 +211,7 @@ static json_object *json_parse_object(const char *blob, size_t *offset) {
 
       (*offset)++;
       json_array *value = json_parse_array(blob, offset);
-      if (value == NULL) {
+      if (!value) {
         json_object_destroy(object);
         fprintf(stderr, "failed to parse array starting at %ld\n", *offset);
         return NULL;
@@ -230,7 +230,7 @@ static json_object *json_parse_object(const char *blob, size_t *offset) {
       }
 
       json_word value = json_parse_word(blob, offset);
-      if (value == 0) {
+      if (!value) {
         json_object_destroy(object);
         fprintf(stderr, "failed to parse word starting at %ld\n", *offset);
         return NULL;

@@ -3,9 +3,7 @@
 
 #include <stdio.h>
 
-#ifndef JSON_OBJECT_SIZE
 #define JSON_OBJECT_SIZE 256
-#endif
 
 typedef enum json_value_type {
   JSON_UNKNOWN,
@@ -52,7 +50,7 @@ typedef struct json_object {
 
 json_value_type json_load(const char *blob, void **object);
 
-json_object *json_object_new(size_t size);
+json_object *json_object_new();
 void json_object_destroy(json_object *object);
 void *json_object_get(json_object *object, const char *key);
 void *json_object_set(json_object *object, json_string key, void *value,

@@ -137,9 +137,9 @@ int json_array_size(json_array *array) {
   return i;
 }
 
-json_object *json_object_new(size_t size) {
+json_object *json_object_new() {
   json_object *object = malloc(sizeof(json_object));
-  if (object == NULL) {
+  if (!object) {
     perror("malloc");
     fprintf(stderr, "json_object_new: failed to malloc\n");
     return NULL;
@@ -189,7 +189,7 @@ void *json_object_set(json_object *object, json_string key, void *value,
   size_t n = string_hash(key) % JSON_OBJECT_SIZE;
 
   json_object_bucket *new_bucket = malloc(sizeof(json_object_bucket));
-  if (new_bucket == NULL) {
+  if (!new_bucket) {
     fprintf(stderr, "json_object_set: failed to malloc\n");
     return NULL;
   }
@@ -200,7 +200,7 @@ void *json_object_set(json_object *object, json_string key, void *value,
 
   if (value_size > 0) {
     new_bucket->value = malloc(value_size);
-    if (new_bucket == NULL) {
+    if (!new_bucket) {
       free(new_bucket);
       fprintf(stderr, "json_object_set: failed to malloc\n");
       return NULL;

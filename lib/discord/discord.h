@@ -4,6 +4,7 @@
 #include "request.h"
 #include "json/json.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -31,7 +32,7 @@ enum channel_types {
   GUILD_DIRECTORY,
   GUILD_FORUM,
   GUILD_MEDIA,
-} discord_channel_types;
+};
 
 struct dcfs_message {
   mode_t mode;

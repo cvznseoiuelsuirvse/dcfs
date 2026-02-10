@@ -13,8 +13,8 @@ typedef enum json_value_type {
 } json_value_type;
 
 typedef enum json_word {
+  JSON_TRUE = 1,
   JSON_FALSE,
-  JSON_TRUE,
   JSON_NULL,
 } json_word;
 

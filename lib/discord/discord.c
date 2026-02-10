@@ -73,6 +73,9 @@ static json_array *discord_get_all_messages(const char *channel_id) {
     json_load(resp.raw, (void **)&json);
     free(resp.raw);
 
+    if (!json)
+      return NULL;
+
     messages_n = json_array_size(json);
 
     json_object *o;
@@ -194,6 +197,9 @@ json_array *discord_get_channels(const char *guild_id) {
   json_load(resp.raw, (void **)&json);
   free(resp.raw);
 
+  if (!json)
+    return NULL;
+
   json_object *o;
   json_array_for_each(json, o) {
     json_string id = json_object_get(o, "id");
@@ -282,8 +288,7 @@ int discord_create_attachments(const char *channel_id, const struct file *files,
            "channels", channel_id, "messages");
 
   if (request_post_files(new_url, files, files_n, resp) != 0)
-    ;
-  res = 1;
+    res = 1;
 
   return res;
 }

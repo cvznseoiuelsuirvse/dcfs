@@ -155,7 +155,6 @@ static int process_files(struct dcfs_channel *channel,
            0);
 
     if (STREQ(decoded_filename, head->filename)) {
-      print_inf("head: %s %ld (%p)\n", head->filename, head->size, head);
       discord_snowflake_init(message_id, &head->id);
 
       // head->size = *size;
@@ -198,8 +197,6 @@ static int upload_file(struct dcfs_channel *channel, struct path *p) {
     struct file files[10];
     memset(&files, 0, sizeof(files));
 
-    print_inf("%s %d (%p)\n", message->filename, message->size, message);
-
     if (message->size / MAX_FILESIZE >= DISCORD_MAX_PARTS) {
       ret = -EFBIG;
       goto out;
@@ -220,7 +217,7 @@ static int upload_file(struct dcfs_channel *channel, struct path *p) {
       if (offset == 0) {
         b64encode(file->filename, p->filename, sizeof(file->filename));
       } else {
-        char tmp_filename[256];
+        char tmp_filename[512];
         snprintf(tmp_filename, sizeof(tmp_filename), "%s.PART%d", p->filename,
                  files_n);
         b64encode(file->filename, tmp_filename, sizeof(file->filename));
@@ -421,14 +418,14 @@ int dcfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *_)
   if (STREQ(path, "/")) {
 #ifdef __APPLE__
     stbuf->mode = S_IFDIR | 0755;
-#else
-    stbuf->st_mode = S_IFDIR | 0755;
-#endif /* __APPLE__ */
-
-#ifdef __APPLE__
+    stbuf->gid = getgid();
+    stbuf->uid = getuid();
     stbuf->ctimespec.tv_sec = GUILD_ID.timestamp;
     stbuf->mtimespec.tv_sec = GUILD_ID.timestamp;
 #else
+    stbuf->st_mode = S_IFDIR | 0755;
+    stbuf->st_gid = getgid();
+    stbuf->st_uid = getuid();
     stbuf->st_ctim.tv_sec = GUILD_ID.timestamp;
     stbuf->st_mtim.tv_sec = GUILD_ID.timestamp;
 #endif /* __APPLE__ */
@@ -459,7 +456,6 @@ int dcfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *_)
     CHECK_NULL(channel, ENOENT);
     struct dcfs_message *message = get_message(channel->messages, &p);
     CHECK_NULL(message, ENOENT);
-    print_inf("%s %d (%p)\n", message->filename, message->size, message);
 
 #ifdef __APPLE__
     stbuf->mode = message->mode;
@@ -484,16 +480,17 @@ int dcfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *_)
 #ifdef __APPLE__
 int dcfs_readdir(const char *path, void *buf, fuse_darwin_fill_dir_t filler,
                  off_t offset, struct fuse_file_info *_,
-                 enum fuse_readdir_flags flags) {
-  (void)offset;
-  (void)flags;
+                 enum fuse_readdir_flags flags)
 
 #else
 int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-                 off_t offset, struct fuse_file_info *fi,
-                 enum fuse_readdir_flags flags) {
+                 off_t offset, struct fuse_file_info *_,
+                 enum fuse_readdir_flags flags)
 #endif /* __APPLE__ */
+{
 
+  (void)offset;
+  (void)flags;
   struct dcfs_state *state = get_state();
 
   struct path p = {0};
@@ -685,7 +682,6 @@ int dcfs_read(const char *path, char *buf, size_t size, off_t offset,
 
     for (size_t i = 0; i < message->parts_n; i++) {
       struct dcfs_message *part = message->parts[i];
-      print_inf("reading part: %s", part->filename);
       resp = (struct response){0};
 
       request_get(part->url, &resp, 0);
@@ -796,10 +792,8 @@ int dcfs_rename(const char *from, const char *to, unsigned int flags) {
     if ((ret = delete_file(old_channel, &p_from)) != 0)
       return -EAGAIN;
 
-    struct dcfs_message *tmp =
-        json_array_push(new_channel->messages, &new_message,
-                        sizeof(struct dcfs_message), JSON_UNKNOWN);
-    print_inf("new_message %p\n", tmp);
+    json_array_push(new_channel->messages, &new_message,
+                    sizeof(struct dcfs_message), JSON_UNKNOWN);
 
     ret = upload_file(new_channel, &p_to);
 
@@ -903,7 +897,7 @@ int main(int argc, char *argv[]) {
 
   state.channels = discord_get_channels(GUILD_ID.value);
   if (!state.channels) {
-    print_err("failed to get channels of guild %s\n", GUILD_ID.value);
+    print_err("failed to get channels\n");
     goto out1;
   }
 

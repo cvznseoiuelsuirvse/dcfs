@@ -11,7 +11,6 @@ cc = meson.get_compiler('c')
 deps = [
   dependency('libcurl'), 
   dependency('fuse3'), 
-  dependency('zlib')
 ]
 
 if build_machine.system() == 'darwin'
@@ -29,7 +28,6 @@ src_files = files(
 
 lib_files = files(
   'lib/discord/discord.c',
-  'lib/discord/api.c',
   'lib/json/json.c',
   'lib/json/reader.c',
 )

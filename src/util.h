@@ -14,7 +14,7 @@ int b64decode(char *out, const char *in, size_t out_len);
 
 int count_char(const char *string, char c);
 int last_index(const char *string, char c);
-int string_hash(const char *string);
+unsigned int string_hash(const char *string);
 void string_normalize(char *out, const char *in, size_t out_len);
 
 #endif

@@ -149,8 +149,8 @@ int last_index(const char *string, char c) {
   return idx;
 }
 
-int string_hash(const char *string) {
-  int hash = 5381;
+unsigned int string_hash(const char *string) {
+  unsigned int hash = 5381;
   int c;
   while ((c = *string++))
     hash = ((hash << 5) + hash) + c;

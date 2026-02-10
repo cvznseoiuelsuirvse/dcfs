@@ -67,7 +67,6 @@ inline static void discord_snowflake_init(const char *id,
 }
 
 void discord_free_channels(json_array *channels);
-void discord_free_channel(struct dcfs_channel *channel);
 json_array *discord_get_channels(const char *guild_id);
 
 void discord_free_messages(json_array *messages);

@@ -1,0 +1,879 @@
+==230417==ERROR: LeakSanitizer: detected memory leaks
+
+Indirect leak of 136192 byte(s) in 56 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3f87 in json_array_push /media/linux/dev/c/dcfs/lib/json/json.c:69:18
+    #2 0x561237ea20c0 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:105:9
+    #3 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #4 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #5 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #6 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #7 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #8 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 114688 byte(s) in 56 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea48b5 in json_object_new /media/linux/dev/c/dcfs/lib/json/json.c:152:25
+    #2 0x561237ea5390 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:147:25
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #8 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #9 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #10 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #14 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 114688 byte(s) in 56 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea48b5 in json_object_new /media/linux/dev/c/dcfs/lib/json/json.c:152:25
+    #2 0x561237ea5390 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:147:25
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 114688 byte(s) in 56 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea48b5 in json_object_new /media/linux/dev/c/dcfs/lib/json/json.c:152:25
+    #2 0x561237ea5390 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:147:25
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 29748 byte(s) in 224 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #8 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #9 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #10 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #14 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 14336 byte(s) in 448 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 8960 byte(s) in 280 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3971 in json_array_new /media/linux/dev/c/dcfs/lib/json/json.c:16:23
+    #2 0x561237ea60bb in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:85:23
+    #3 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 8960 byte(s) in 280 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5af9 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:222:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 8960 byte(s) in 280 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 7168 byte(s) in 224 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 7168 byte(s) in 224 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #8 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #9 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #10 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #14 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 6048 byte(s) in 448 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 5600 byte(s) in 280 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 5376 byte(s) in 168 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 4096 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea48b5 in json_object_new /media/linux/dev/c/dcfs/lib/json/json.c:152:25
+    #2 0x561237ea5390 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:147:25
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #8 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #9 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #10 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #11 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 4096 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea48b5 in json_object_new /media/linux/dev/c/dcfs/lib/json/json.c:152:25
+    #2 0x561237ea5390 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:147:25
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 4088 byte(s) in 168 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 3584 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 3584 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #8 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #9 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #10 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #14 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 3584 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 2968 byte(s) in 280 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5af9 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:222:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 2520 byte(s) in 280 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 2520 byte(s) in 224 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1792 byte(s) in 56 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5907 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:201:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1792 byte(s) in 448 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1792 byte(s) in 56 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea56f8 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:180:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1728 byte(s) in 54 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3e68 in json_array_push /media/linux/dev/c/dcfs/lib/json/json.c:57:12
+    #2 0x561237ea63f1 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:111:7
+    #3 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #4 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #5 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #6 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #7 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #8 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1728 byte(s) in 54 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3e68 in json_array_push /media/linux/dev/c/dcfs/lib/json/json.c:57:12
+    #2 0x561237ea20c0 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:105:9
+    #3 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #4 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #5 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #6 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #7 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #8 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1456 byte(s) in 224 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #8 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #9 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #10 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #14 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1456 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #8 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #9 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #10 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #14 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1344 byte(s) in 168 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 1064 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 896 byte(s) in 224 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 616 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 448 byte(s) in 56 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea56f8 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:180:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 448 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 448 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea5843 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:194:28
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #7 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #8 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #9 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 448 byte(s) in 112 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #8 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #9 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #10 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #13 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #14 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 392 byte(s) in 56 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5907 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:201:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #6 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #7 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #8 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #12 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 256 byte(s) in 8 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 256 byte(s) in 8 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 192 byte(s) in 6 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #8 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #9 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #10 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #11 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 192 byte(s) in 6 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 142 byte(s) in 8 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 80 byte(s) in 8 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 66 byte(s) in 8 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 64 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3971 in json_array_new /media/linux/dev/c/dcfs/lib/json/json.c:16:23
+    #2 0x561237ea60bb in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:85:23
+    #3 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #4 0x561237ea1dc3 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:72:5
+    #5 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #6 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #7 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #8 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #10 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #11 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 64 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3971 in json_array_new /media/linux/dev/c/dcfs/lib/json/json.c:16:23
+    #2 0x561237ea1aa7 in discord_get_all_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:25:26
+    #3 0x561237ea12e8 in discord_get_messages /media/linux/dev/c/dcfs/lib/discord/discord.c:118:26
+    #4 0x561237e99786 in dcfs_getattr /media/linux/dev/c/dcfs/src/main.c:438:27
+    #5 0x7fcaefe0bdff  (/usr/lib/libfuse3.so.4+0xbdff) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #6 0x7fcaefe105dc  (/usr/lib/libfuse3.so.4+0x105dc) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #7 0x7fcaefe1f84e  (/usr/lib/libfuse3.so.4+0x1f84e) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #8 0x7fcaefe15c49  (/usr/lib/libfuse3.so.4+0x15c49) (BuildId: 2a4ebbbca0cfa6e0aa7a1e9ebce0d3972a98c4f9)
+    #9 0x561237d6f5fc in asan_thread_start(void*) asan_interceptors.cpp.o
+
+Indirect leak of 64 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5af9 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:222:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 64 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4b4c in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:202:36
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #8 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #9 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #10 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #11 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 64 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3971 in json_array_new /media/linux/dev/c/dcfs/lib/json/json.c:16:23
+    #2 0x561237ea60bb in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:85:23
+    #3 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #4 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #5 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #6 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #7 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #8 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #9 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #10 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 54 byte(s) in 6 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #8 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #9 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #10 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #11 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 44 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5af9 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:222:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 42 byte(s) in 6 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 32 byte(s) in 1 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3971 in json_array_new /media/linux/dev/c/dcfs/lib/json/json.c:16:23
+    #2 0x561237ea60bb in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:85:23
+    #3 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #4 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #5 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #6 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #7 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #8 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 32 byte(s) in 8 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 32 byte(s) in 1 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea3e68 in json_array_push /media/linux/dev/c/dcfs/lib/json/json.c:57:12
+    #2 0x561237ea63f1 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:111:7
+    #3 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #4 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #5 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #6 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #7 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #8 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 28 byte(s) in 6 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea56d6 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:178:11
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #8 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #9 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #10 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #11 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 24 byte(s) in 6 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea5ccd in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:241:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #5 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #6 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #7 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #8 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #9 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 10 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e407fa in strdup (/media/linux/dev/c/dcfs/bin/main+0x12c7fa) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4bef in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:210:21
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #8 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #9 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #10 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #11 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+Indirect leak of 8 byte(s) in 2 object(s) allocated from:
+    #0 0x561237e46dc5 in malloc (/media/linux/dev/c/dcfs/bin/main+0x132dc5) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+    #1 0x561237ea4c78 in json_object_set /media/linux/dev/c/dcfs/lib/json/json.c:214:25
+    #2 0x561237ea5e0e in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:254:7
+    #3 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #4 0x561237ea5a20 in json_parse_object /media/linux/dev/c/dcfs/lib/json/reader.c:214:27
+    #5 0x561237ea6335 in json_parse_array /media/linux/dev/c/dcfs/lib/json/reader.c:105:28
+    #6 0x561237ea50f6 in json_load /media/linux/dev/c/dcfs/lib/json/reader.c:272:15
+    #7 0x561237ea264c in discord_get_channels /media/linux/dev/c/dcfs/lib/discord/discord.c:191:3
+    #8 0x561237e9e8c7 in main /media/linux/dev/c/dcfs/src/main.c:898:20
+    #9 0x7fcaefb0b634 in __libc_start_call_main /usr/src/debug/glibc/glibc/csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #10 0x7fcaefb0b6e8 in __libc_start_main /usr/src/debug/glibc/glibc/csu/../csu/libc-start.c:360:3
+    #11 0x561237d432d4 in _start (/media/linux/dev/c/dcfs/bin/main+0x2f2d4) (BuildId: 4ece8b34a9294e217ab41ebf4492020c626fb29c)
+
+SUMMARY: AddressSanitizer: 633278 byte(s) leaked in 6542 allocation(s).

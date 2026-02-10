@@ -3,6 +3,10 @@
 
 #include <stdio.h>
 
+#ifndef JSON_OBJECT_SIZE
+#define JSON_OBJECT_SIZE 256
+#endif
+
 typedef enum json_value_type {
   JSON_UNKNOWN,
   JSON_STRING,
@@ -36,15 +40,14 @@ typedef struct json_object_bucket {
 } json_object_bucket;
 
 typedef struct json_object {
-  json_object_bucket **buckets;
-  unsigned long size;
+  json_object_bucket *buckets[JSON_OBJECT_SIZE];
 } json_object;
 
 #define json_array_for_each(pos, member)                                       \
   for (; pos && pos->data && ((member = pos->data), 1); pos = pos->next)
 
 #define json_object_for_each(m, p)                                             \
-  for (size_t __i = 0; __i < (m)->size; __i++)                                 \
+  for (size_t __i = 0; __i < JSON_OBJECT_SIZE; __i++)                          \
     for ((p) = (m)->buckets[__i]; (p) != NULL; (p) = (p)->next)
 
 json_value_type json_load(const char *blob, void **object);

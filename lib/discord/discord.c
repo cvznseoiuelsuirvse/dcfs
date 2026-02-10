@@ -18,7 +18,7 @@ void discord_free_message(struct dcfs_message *message) {
 void discord_free_messages(json_array *messages) {
   struct dcfs_message *message;
   json_array *_m = messages;
-  json_array_for_each(_m, message) { discord_free_message(message); }
+  json_array_for_each(_m, message) discord_free_message(message);
   json_array_destroy(messages);
 }
 
@@ -69,17 +69,20 @@ static json_array *discord_get_all_messages(const char *channel_id) {
       return NULL;
     }
 
-    json_array *json;
+    json_array *json = NULL;
     json_load(resp.raw, (void **)&json);
     free(resp.raw);
 
-    if (!json)
+    if (!json) {
+      json_array_destroy(messages);
       return NULL;
+    }
 
     messages_n = json_array_size(json);
 
     json_object *o;
-    json_array_for_each(json, o) {
+    json_array *_j = json;
+    json_array_for_each(_j, o) {
       json_string message_id = json_object_get(o, "id");
 
       json_object *attachment;
@@ -163,14 +166,10 @@ json_array *discord_get_messages(const char *channel_id) {
   return NULL;
 }
 
-void discord_free_channel(struct dcfs_channel *channel) {
-  discord_free_messages(channel->messages);
-}
-
 void discord_free_channels(json_array *channels) {
   struct dcfs_channel *channel;
   json_array *_c = channels;
-  json_array_for_each(_c, channel) { discord_free_channel(channel); }
+  json_array_for_each(_c, channel) discord_free_messages(channel->messages);
   json_array_destroy(channels);
 }
 
@@ -179,29 +178,34 @@ json_array *discord_get_channels(const char *guild_id) {
   snprintf(new_url, DISCORD_SIZE, "%s/%s/%s/%s", DISCORD_API_BASE_URL, "guilds",
            guild_id, "channels");
 
-  json_array *channels = json_array_new();
   struct response resp = {0};
 
   if (request_get(new_url, &resp, 1) != 0) {
     free(resp.raw);
-    json_array_destroy(channels);
     return NULL;
   }
 
   if (resp.http_code != 200) {
-    json_array_destroy(channels);
+    free(resp.raw);
     return NULL;
   }
 
-  json_array *json;
+  json_array *json = NULL;
   json_load(resp.raw, (void **)&json);
   free(resp.raw);
 
   if (!json)
     return NULL;
 
+  json_array *channels = json_array_new();
+  if (!channels) {
+    json_array_destroy(json);
+    return NULL;
+  }
+
   json_object *o;
-  json_array_for_each(json, o) {
+  json_array *_j = json;
+  json_array_for_each(_j, o) {
     json_string id = json_object_get(o, "id");
     json_string name = json_object_get(o, "name");
     json_number *type = json_object_get(o, "type");

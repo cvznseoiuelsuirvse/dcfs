@@ -1,37 +1,29 @@
-#include "json/json.h"
+#include "json.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 static json_object *json_parse_object(const char *blob, size_t *offset);
 
-static json_string json_parse_string(const char *blob, size_t *offset) {
+static int json_parse_string(const char *blob, size_t *offset, char *buffer,
+                             size_t buffer_size) {
   (*offset)++;
   size_t blob_size = strlen(blob);
   if (*offset >= blob_size)
-    return NULL;
+    return -1;
 
-  size_t start = *offset;
-  for (; *offset < blob_size; (*offset)++) {
+  memset(buffer, 0, buffer_size);
+
+  for (int i = 0; *offset < blob_size; (*offset)++, i++) {
     char c = blob[*offset];
     if (c == '"') {
-      size_t string_len = *(offset)-start;
-      json_string string;
-
-      if (string_len == 0) {
-        string = NULL;
-
-      } else {
-        string = malloc(string_len + 1);
-        string[string_len] = 0;
-        memcpy(string, &blob[start], string_len);
-      }
-
-      return string;
-    }
+      buffer[i + 1] = 0;
+      return i;
+    } else
+      buffer[i] = c;
   }
 
-  return NULL;
+  return -1;
 }
 
 static json_number json_parse_number(const char *blob, size_t *offset) {
@@ -45,11 +37,11 @@ static json_number json_parse_number(const char *blob, size_t *offset) {
 
     if (!(48 <= c && c <= 57)) {
       size_t token_len = *(offset)-start;
-      char *token = malloc(token_len + 1);
+      char token[token_len + 1];
+      token[token_len] = 0;
       memcpy(token, &blob[start], token_len);
 
       int number = strtol(token, NULL, 10);
-      free(token);
 
       *offset -= 1;
       return number;
@@ -91,46 +83,52 @@ static json_word json_parse_word(const char *blob, size_t *offset) {
 static json_array *json_parse_array(const char *blob, size_t *offset) {
   size_t blob_size = strlen(blob);
   json_array *array = json_array_new();
-  if (array == NULL)
+  if (!array)
     return NULL;
 
   for (; *offset < blob_size; (*offset)++) {
     char c = blob[*offset];
 
     if (c == '"') {
-      json_string value = json_parse_string(blob, offset);
-      json_array_push(array, value, strlen(value) + 1, JSON_STRING);
+      char buffer[1024];
+      int string_size = json_parse_string(blob, offset, buffer, sizeof(buffer));
+      if (string_size == -1) {
+        json_array_destroy(array);
+        fprintf(stderr, "failed to parse string starting at %ld\n", *offset);
+        return NULL;
+      }
+      json_array_push(array, buffer, string_size + 1, JSON_STRING);
 
     } else if (c == '{') {
       (*offset)++;
       json_object *value = json_parse_object(blob, offset);
       if (value == NULL) {
         json_array_destroy(array);
-        fprintf(stderr, "failed to parse object at pos %ld\n", *offset);
+        fprintf(stderr, "failed to parse object starting at %ld\n", *offset);
         return NULL;
       }
-      json_array_push(array, value, sizeof(json_object), JSON_OBJECT);
+      json_array_push(array, value, 0, JSON_OBJECT);
 
     } else if (c == '[') {
       (*offset)++;
       json_array *value = json_parse_array(blob, offset);
       if (value == NULL) {
         json_array_destroy(array);
-        fprintf(stderr, "failed to parse array at pos %ld\n", *offset);
+        fprintf(stderr, "failed to parse array starting at %ld\n", *offset);
         return NULL;
       }
-      json_array_push(array, value, sizeof(json_array), JSON_ARRAY);
+      json_array_push(array, value, 0, JSON_ARRAY);
 
     } else if (c == 'n' || c == 'f' || c == 't') {
       json_word value = json_parse_word(blob, offset);
       if (value == 0) {
         json_array_destroy(array);
-        fprintf(stderr, "failed to parse word at pos %ld\n", *offset);
+        fprintf(stderr, "failed to parse word starting at %ld\n", *offset);
         return NULL;
       }
       json_array_push(array, &value, sizeof(json_word), JSON_WORD);
 
-    } else if (48 <= c && c <= 57) {
+    } else if ((48 <= c && c <= 57) || c == '-') {
       json_number value = json_parse_number(blob, offset);
       json_array_push(array, &value, sizeof(json_number), JSON_NUMBER);
 
@@ -148,32 +146,42 @@ static json_object *json_parse_object(const char *blob, size_t *offset) {
   json_object *object = json_object_new(128);
   if (object == NULL)
     return NULL;
-  json_string key = NULL;
+
+  char key[1024];
+  memset(key, 0, sizeof(key));
 
   for (; *offset < blob_size; (*offset)++) {
     char c = blob[*offset];
 
     if (c == '"') {
-      if (key == NULL) {
-        key = json_parse_string(blob, offset);
-        if (key == NULL) {
+      if (!*key) {
+        int key_size = json_parse_string(blob, offset, key, sizeof(key));
+        if (key_size == -1) {
           json_object_destroy(object);
-          fprintf(stderr, "failed to parse key at pos %ld\n", *offset);
+          fprintf(stderr, "failed to parse key starting at %ld\n", *offset);
           return NULL;
         }
 
       } else {
-        json_string value = json_parse_string(blob, offset);
-        if (value != NULL) {
-          json_object_set(object, key, value, strlen(value) + 1, JSON_STRING);
-        } else {
-          json_object_set(object, key, value, 0, JSON_STRING);
-        }
-        key = NULL;
-      }
+        char buffer[1024];
+        int string_size =
+            json_parse_string(blob, offset, buffer, sizeof(buffer));
 
+        if (string_size == -1) {
+          json_object_destroy(object);
+          fprintf(stderr, "failed to parse string starting at %ld\n", *offset);
+          return NULL;
+        }
+
+        if (string_size)
+          json_object_set(object, key, buffer, string_size + 1, JSON_STRING);
+        else
+          json_object_set(object, key, NULL, 0, JSON_STRING);
+
+        key[0] = 0;
+      }
     } else if (c == '{') {
-      if (key == NULL) {
+      if (!*key) {
         json_object_destroy(object);
         fprintf(stderr,
                 "can't start parsing object value without a key. pos %ld\n",
@@ -183,17 +191,17 @@ static json_object *json_parse_object(const char *blob, size_t *offset) {
 
       (*offset)++;
       json_object *value = json_parse_object(blob, offset);
-      if (value == NULL) {
+      if (!value) {
         json_object_destroy(object);
-        free(key);
-        fprintf(stderr, "failed to parse object at pos %ld\n", *offset);
+        fprintf(stderr, "failed to parse object starting at %ld\n", *offset);
         return NULL;
       }
-      json_object_set(object, key, value, sizeof(json_object), JSON_OBJECT);
-      key = NULL;
+
+      json_object_set(object, key, value, 0, JSON_OBJECT);
+      key[0] = 0;
 
     } else if (c == '[') {
-      if (key == NULL) {
+      if (!*key) {
         json_object_destroy(object);
         fprintf(stderr,
                 "can't start parsing array value without a key. pos %ld\n",
@@ -205,33 +213,34 @@ static json_object *json_parse_object(const char *blob, size_t *offset) {
       json_array *value = json_parse_array(blob, offset);
       if (value == NULL) {
         json_object_destroy(object);
-        free(key);
-        fprintf(stderr, "failed to parse array at pos %ld\n", *offset);
+        fprintf(stderr, "failed to parse array starting at %ld\n", *offset);
         return NULL;
       }
-      json_object_set(object, key, value, sizeof(json_array), JSON_ARRAY);
-      key = NULL;
+
+      json_object_set(object, key, value, 0, JSON_ARRAY);
+      key[0] = 0;
 
     } else if (c == 'n' || c == 'f' || c == 't') {
-      if (key == NULL) {
+      if (!*key) {
         json_object_destroy(object);
         fprintf(stderr,
                 "can't start parsing word value without a key. pos %ld\n",
                 *offset);
         return NULL;
       }
+
       json_word value = json_parse_word(blob, offset);
       if (value == 0) {
         json_object_destroy(object);
-        free(key);
-        fprintf(stderr, "failed to parse word at pos %ld\n", *offset);
+        fprintf(stderr, "failed to parse word starting at %ld\n", *offset);
         return NULL;
       }
+
       json_object_set(object, key, &value, sizeof(json_word), JSON_WORD);
-      key = NULL;
+      key[0] = 0;
 
     } else if (48 <= c && c <= 57) {
-      if (key == NULL) {
+      if (!*key) {
         json_object_destroy(object);
         fprintf(stderr,
                 "can't start parsing number value without a key. pos %ld\n",
@@ -241,7 +250,8 @@ static json_object *json_parse_object(const char *blob, size_t *offset) {
 
       json_number value = json_parse_number(blob, offset);
       json_object_set(object, key, &value, sizeof(json_number), JSON_NUMBER);
-      key = NULL;
+      key[0] = 0;
+
     } else if (c == '}') {
       return object;
     }
@@ -261,5 +271,5 @@ json_value_type json_load(const char *blob, void **object) {
     return JSON_ARRAY;
   }
 
-  return JSON_UNKNOWN;
+  return -1;
 }

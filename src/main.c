@@ -285,7 +285,7 @@ int dcfs_rmdir(const char *path) {
         return -EAGAIN;
       }
 
-      discord_free_channel(channel);
+      discord_free_messages(channel->messages);
       json_array_remove_ptr(&state->channels, channel);
 
       return 0;

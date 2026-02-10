@@ -22,11 +22,8 @@ static size_t write_cb(void *content, size_t size, size_t nmemb, void *data) {
 }
 
 static struct curl_slist *append_auth_header(struct curl_slist *headers) {
-  size_t auth_string_size =
-      strlen("Authorization: ") + strlen(get_auth_token()) + 1;
-  char auth_string[auth_string_size];
-
-  snprintf(auth_string, auth_string_size, "Authorization: %s",
+  char auth_string[512];
+  snprintf(auth_string, sizeof(auth_string), "Authorization: %s",
            get_auth_token());
 
   return curl_slist_append(headers, auth_string);
@@ -59,6 +56,7 @@ int request_get(const char *url, struct response *resp, char user_auth) {
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
     }
 
+    curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
   }
 
@@ -99,6 +97,8 @@ int request_post_files(const char *url, const struct file *files,
     } else {
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
     }
+
+    curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
   }
 
@@ -133,6 +133,8 @@ int request_post(const char *url, char *data, struct response *resp,
     } else {
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
     }
+
+    curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
   }
 
@@ -166,6 +168,8 @@ int request_patch(const char *url, char *data, struct response *resp,
     } else {
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
     }
+
+    curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
   }
 
@@ -181,8 +185,9 @@ int request_delete(const char *url, struct response *resp, char user_auth) {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, resp);
 
+    struct curl_slist *headers;
     if (user_auth != 0) {
-      struct curl_slist *headers = append_auth_header(NULL);
+      headers = append_auth_header(NULL);
       curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     }
 
@@ -193,6 +198,10 @@ int request_delete(const char *url, struct response *resp, char user_auth) {
     } else {
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &resp->http_code);
     }
+
+    if (user_auth != 0)
+      curl_slist_free_all(headers);
+
     curl_easy_cleanup(curl);
   }
 

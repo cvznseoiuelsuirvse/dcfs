@@ -2,13 +2,7 @@
 #include "util.h"
 
 #include <assert.h>
-#include <regex.h>
 #include <sys/stat.h>
-
-static struct {
-  regex_t comp;
-  regmatch_t matches[3];
-} part_regex;
 
 void discord_free_message(struct dcfs_message *message) {
   free(message->url);
@@ -22,7 +16,7 @@ void discord_free_messages(json_array *messages) {
   json_array_destroy(messages);
 }
 
-static json_array *discord_get_all_messages(const char *channel_id) {
+json_array *discord_get_messages(const char *channel_id) {
   json_array *messages = json_array_new();
 
   int messages_n = -1;
@@ -52,7 +46,7 @@ static json_array *discord_get_all_messages(const char *channel_id) {
 
       snprintf(new_url, DISCORD_SIZE, "%s/%s/%s/%s?limit=100&before=%s",
                DISCORD_API_BASE_URL, "channels", channel_id, "messages",
-               last_message->id.value);
+               last_message->id);
     }
 
     request_get(new_url, &resp, 1);
@@ -91,20 +85,15 @@ static json_array *discord_get_all_messages(const char *channel_id) {
         struct dcfs_message message;
         memset(&message, 0, sizeof(struct dcfs_message));
 
-        discord_snowflake_init(message_id, &message.id);
-
         json_string filename = json_object_get(attachment, "filename");
         json_number *size = json_object_get(attachment, "size");
         json_string url = json_object_get(attachment, "url");
 
-        assert(b64decode(message.filename, filename,
-                         sizeof(message.filename)) == 0);
+        snprintf(message.id, sizeof(message.id), "%s", message_id);
+        b64decode(message.filename, filename, sizeof(message.filename));
 
         message.size = *size;
         message.url = strdup(url);
-        message.mode = S_IFREG | 0644;
-        message.gid = getgid();
-        message.uid = getuid();
 
         json_array_push(messages, &message, sizeof(struct dcfs_message),
                         JSON_UNKNOWN);
@@ -114,63 +103,6 @@ static json_array *discord_get_all_messages(const char *channel_id) {
   }
 
   return messages;
-}
-
-json_array *discord_get_messages(const char *channel_id) {
-  regcomp(&part_regex.comp, "(.+)\\.PART([0-9]+)", REG_EXTENDED);
-
-  json_array *messages = discord_get_all_messages(channel_id);
-
-  if (messages) {
-    struct dcfs_message *message;
-    json_array *_messages = messages;
-    json_array_for_each(_messages, message) {
-      int ret = regexec(&part_regex.comp, message->filename,
-                        sizeof(part_regex.matches) / sizeof(regmatch_t),
-                        part_regex.matches, 0);
-
-      if (ret == 0) {
-        regmatch_t m_body = part_regex.matches[1];
-        regmatch_t m_part = part_regex.matches[2];
-        size_t part = strtol(message->filename + m_part.rm_so, NULL, 10);
-
-        if (part >= DISCORD_MAX_PARTS) {
-          discord_free_messages(messages);
-          return NULL;
-        }
-
-        size_t body_size = m_body.rm_eo - m_body.rm_so;
-        char body[body_size + 1];
-        memcpy(body, message->filename + m_body.rm_so, body_size);
-        body[body_size] = 0;
-        message->is_part = 1;
-
-        json_array *_messages1 = messages;
-        struct dcfs_message *message_head;
-        json_array_for_each(_messages1, message_head) {
-          if (strcmp(message_head->filename, body) == 0) {
-            message_head->parts_n++;
-            message_head->parts[part - 1] = message;
-            message_head->size += message->size;
-            break;
-          };
-        }
-      }
-    }
-
-    regfree(&part_regex.comp);
-    return messages;
-  }
-
-  regfree(&part_regex.comp);
-  return NULL;
-}
-
-void discord_free_channels(json_array *channels) {
-  struct dcfs_channel *channel;
-  json_array *_c = channels;
-  json_array_for_each(_c, channel) discord_free_messages(channel->messages);
-  json_array_destroy(channels);
 }
 
 json_array *discord_get_channels(const char *guild_id) {
@@ -214,14 +146,11 @@ json_array *discord_get_channels(const char *guild_id) {
     struct dcfs_channel channel;
     memset(&channel, 0, sizeof(struct dcfs_channel));
 
-    discord_snowflake_init(id, &channel.id);
-    strcpy(channel.name, name);
+    snprintf(channel.id, sizeof(channel.id), "%s", id);
+    snprintf(channel.name, sizeof(channel.name), "%s", name);
 
     channel.type = *type;
     channel.has_parent = *parent == JSON_NULL ? 0 : 1;
-    channel.mode = S_IFDIR | 0755;
-    channel.gid = getgid();
-    channel.uid = getuid();
 
     json_array_push(channels, &channel, sizeof(struct dcfs_channel),
                     JSON_UNKNOWN);

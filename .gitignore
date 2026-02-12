@@ -1,9 +1,10 @@
 build/
 bin/
-fuse_examples/
 mnt/
-sshfs/
 .cache/
+fuse_examples/
+sshfs/
+libfuse/
 .env
 .clangd
 Makefile

@@ -21,7 +21,8 @@ endif
 add_project_arguments('-DMAX_FILESIZE=' + get_option('max_filesize').to_string(), language: 'c')
 
 src_files = files(
-  'src/main.c',
+  'src/dcfs.c',
+  'src/fs.c',
   'src/request.c',
   'src/util.c',
 )

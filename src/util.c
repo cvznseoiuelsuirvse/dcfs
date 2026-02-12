@@ -26,26 +26,9 @@ static int b64inv[] = {
     -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71, -71,
 };
 
-void print_buffer(char *buffer, size_t buffer_len) {
-  for (size_t i = 0; i < buffer_len; i++) {
-    uint8_t c = buffer[i];
-    if (c < 32 || c > 126) {
-      printf("%02x ", c);
-    } else {
-      printf("%c ", c);
-    }
-  }
-  printf("\n");
-}
-
-size_t get_filesize(const char *path) {
-  struct stat s;
-  int ret = stat(path, &s);
-  if (ret != 0) {
-    perror("stat");
-    return 0;
-  }
-  return s.st_size;
+inline void id_to_ctime(time_t *dest, const char *id) {
+  uint64_t n = strtoll(id, NULL, 10);
+  *dest = ((n >> 22) + 1420070400000) / 1000;
 }
 
 char *get_auth_token() {
@@ -61,7 +44,7 @@ char *get_auth_token() {
 char *get_guild_id() {
   char *value = getenv("DCFS_GUILD_ID");
 
-  if (value != NULL && strlen(value) > 20) {
+  if (value != NULL && strlen(value) > 48) {
     printf("DCFS_GUILD_ID is too long\n");
     return NULL;
   }
@@ -149,8 +132,8 @@ int last_index(const char *string, char c) {
   return idx;
 }
 
-unsigned int string_hash(const char *string) {
-  unsigned int hash = 5381;
+dcfs_hash string_hash(const char *string) {
+  dcfs_hash hash = 5381;
   int c;
   while ((c = *string++))
     hash = ((hash << 5) + hash) + c;
@@ -171,6 +154,6 @@ void string_normalize(char *out, const char *in, size_t out_len) {
   CFRelease(cfStringRef);
   CFRelease(cfMutable);
 #else
-  strcpy(out, in);
+  memcpy(out, in, out_len);
 #endif
 }

@@ -4,7 +4,6 @@
 #include "request.h"
 #include "json/json.h"
 
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -15,7 +14,6 @@
 
 struct discord_snowflake {
   size_t timestamp;
-  char value[64];
 };
 
 enum channel_types {
@@ -35,36 +33,19 @@ enum channel_types {
 };
 
 struct dcfs_message {
-  mode_t mode;
-  gid_t gid;
-  uid_t uid;
-  struct discord_snowflake id;
+  char id[64];
   char filename[256];
   char *url;
   char *content;
   size_t size;
-  struct dcfs_message *parts[DISCORD_MAX_PARTS];
-  size_t parts_n;
-  int is_part;
 };
 
 struct dcfs_channel {
-  mode_t mode;
-  gid_t gid;
-  uid_t uid;
-  struct discord_snowflake id;
+  char id[64];
   char name[128];
   enum channel_types type;
   char has_parent;
-  json_array *messages;
 };
-inline static void discord_snowflake_init(const char *id,
-                                          struct discord_snowflake *snowflake) {
-  memset(snowflake, 0, sizeof(struct discord_snowflake));
-  uint64_t n = strtoll(id, NULL, 10);
-  snowflake->timestamp = ((n >> 22) + 1420070400000) / 1000;
-  strcpy(snowflake->value, id);
-}
 
 void discord_free_channels(json_array *channels);
 json_array *discord_get_channels(const char *guild_id);

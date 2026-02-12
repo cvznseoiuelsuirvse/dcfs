@@ -642,7 +642,7 @@ int dcfs_write(const char *path, const char *buf, size_t size, off_t offset,
 
     if (!message->content) {
       print_err("dcfs_write: failed to malloc\n");
-      return -1;
+      return -ENOBUFS;
     }
   } else {
     message->content = realloc(message->content, message->size);
@@ -779,8 +779,10 @@ int dcfs_rename(const char *from, const char *to, unsigned int flags) {
     CHECK_NULL(old_message, ENOENT);
 
     new_message.content = malloc(old_message->size);
-    if (!new_message.content)
-      return -1;
+    if (!new_message.content) {
+      print_err("dcfs_rename: failed to malloc\n");
+      return -ENOBUFS;
+    }
 
     int offset = 0;
     int bytes_read = 0;
@@ -790,9 +792,14 @@ int dcfs_rename(const char *from, const char *to, unsigned int flags) {
     ;
     new_message.size = old_message->size;
 
+    new_message.mode = old_message->mode;
+    new_message.gid = old_message->gid;
+    new_message.uid = old_message->uid;
+
     if ((ret = delete_file(old_channel, &p_from)) != 0)
       return -EAGAIN;
 
+    json_array_remove_ptr(&old_channel->messages, old_message);
     json_array_push(new_channel->messages, &new_message,
                     sizeof(struct dcfs_message), JSON_UNKNOWN);
 

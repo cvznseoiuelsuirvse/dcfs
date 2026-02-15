@@ -25,19 +25,15 @@ src_files = files(
   'src/fs.c',
   'src/request.c',
   'src/util.c',
+  'src/discord/discord.c',
+  'src/json/json.c',
+  'src/json/reader.c',
 )
 
-lib_files = files(
-  'lib/discord/discord.c',
-  'lib/json/json.c',
-  'lib/json/reader.c',
-)
-
-inc_dirs = include_directories('lib', 'src')
+inc_dirs = include_directories('src')
 
 executable('dcfs',
   src_files,
-  lib_files,
   include_directories: inc_dirs,
   dependencies: deps,
   c_args: ['-Wno-unused-parameter'],

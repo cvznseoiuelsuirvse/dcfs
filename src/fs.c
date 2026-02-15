@@ -66,7 +66,7 @@ json_array *dcfs_get_files(const char *channel_id) {
         struct dcfs_file file;
         memset(&file, 0, sizeof(struct dcfs_file));
 
-        struct dcfs_message *head = calloc(sizeof(struct dcfs_message), 1);
+        struct dcfs_message *head = calloc(1, sizeof(struct dcfs_message));
         assert(head);
 
         id_to_ctime(&file.ctime, message->id);
@@ -117,7 +117,7 @@ json_array *dcfs_get_files(const char *channel_id) {
         struct dcfs_file *file;
         json_array_for_each(_files, file) {
           if (strcmp(file->filename, filename) == 0) {
-            struct dcfs_message *part = calloc(sizeof(struct dcfs_message), 1);
+            struct dcfs_message *part = calloc(1, sizeof(struct dcfs_message));
             assert(part);
 
             part->size = message->size;

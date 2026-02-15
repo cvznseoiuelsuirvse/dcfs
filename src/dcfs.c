@@ -132,7 +132,7 @@ static int process_files(struct dcfs_dir *dir, struct dcfs_file *dcfs_file,
 
     b64decode(decoded_filename, filename, sizeof(decoded_filename));
 
-    message = calloc(sizeof(struct dcfs_message), 1);
+    message = calloc(1, sizeof(struct dcfs_message));
     assert(message);
 
     snprintf(message->id, sizeof(message->id), "%s", message_id);

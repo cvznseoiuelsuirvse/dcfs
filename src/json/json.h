@@ -42,7 +42,7 @@ typedef struct json_object {
 } json_object;
 
 #define json_array_for_each(pos, member)                                       \
-  for (; pos && pos->data && ((member = pos->data), 1); pos = pos->next)
+  for (json_array *__pos = pos; __pos && __pos->data && ((member = __pos->data), 1); __pos = __pos->next)
 
 #define json_object_for_each(m, p)                                             \
   for (size_t __i = 0; __i < JSON_OBJECT_SIZE; __i++)                          \

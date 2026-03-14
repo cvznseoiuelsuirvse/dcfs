@@ -234,8 +234,7 @@ int dcfs_rmdir(const char *path) {
   print_op("dcfs_rmdir", &p);
 
   struct dcfs_dir *dir;
-  json_array *_d = state->dirs;
-  json_array_for_each(_d, dir) {
+  json_array_for_each(state->dirs, dir) {
     if (STREQ(path + 1, dir->channel.name)) {
       struct response resp = {0};
       discord_delete_channel(dir->channel.id, &resp);
@@ -466,8 +465,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
   if (STREQ(path, "/")) {
     struct dcfs_dir *dir;
-    json_array *_d = state->dirs;
-    json_array_for_each(_d, dir) {
+    json_array_for_each(state->dirs, dir) {
       if (dir->channel.type == GUILD_TEXT && !dir->channel.has_parent) {
         filler(buf, dir->channel.name, NULL, 0, FUSE_FILL_DIR_DEFAULTS);
       }
@@ -477,8 +475,7 @@ int dcfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     CHECK_NULL(dir, ENOENT);
 
     struct dcfs_file *file;
-    json_array *_f = dir->files;
-    json_array_for_each(_f, file) {
+    json_array_for_each(dir->files, file) {
       filler(buf, file->filename, NULL, 0, FUSE_FILL_DIR_DEFAULTS);
     }
   }

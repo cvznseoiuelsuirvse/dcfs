@@ -42,8 +42,7 @@ void dcfs_free_file(struct dcfs_file *file) {
 
 void dcfs_free_files(json_array *files) {
   struct dcfs_file *file;
-  json_array *_f = files;
-  json_array_for_each(_f, file) dcfs_free_file(file);
+  json_array_for_each(files, file) dcfs_free_file(file);
   json_array_destroy(files);
 }
 
@@ -56,8 +55,7 @@ json_array *dcfs_get_files(const char *channel_id) {
     files = json_array_new();
 
     struct dcfs_message *message;
-    json_array *_messages = messages;
-    json_array_for_each(_messages, message) {
+    json_array_for_each(messages, message) {
       int ret = regexec(&part_regex.comp, message->filename,
                         sizeof(part_regex.matches) / sizeof(regmatch_t),
                         part_regex.matches, 0);
@@ -90,8 +88,7 @@ json_array *dcfs_get_files(const char *channel_id) {
       }
     }
 
-    _messages = messages;
-    json_array_for_each(_messages, message) {
+    json_array_for_each(messages, message) {
       int ret = regexec(&part_regex.comp, message->filename,
                         sizeof(part_regex.matches) / sizeof(regmatch_t),
                         part_regex.matches, 0);
@@ -113,9 +110,8 @@ json_array *dcfs_get_files(const char *channel_id) {
         // memcpy(filename, message->filename + m_filename.rm_so,
         // filename_size); filename[filename_size] = 0;
 
-        json_array *_files = files;
         struct dcfs_file *file;
-        json_array_for_each(_files, file) {
+        json_array_for_each(files, file) {
           if (strcmp(file->filename, filename) == 0) {
             struct dcfs_message *part = calloc(1, sizeof(struct dcfs_message));
             assert(part);
@@ -147,9 +143,8 @@ inline void dcfs_free_dir(struct dcfs_dir *dir) {
 };
 
 void dcfs_free_dirs(json_array *dirs) {
-  json_array *_d = dirs;
   struct dcfs_dir *dir;
-  json_array_for_each(_d, dir) dcfs_free_dir(dir);
+  json_array_for_each(dirs, dir) dcfs_free_dir(dir);
   json_array_destroy(dirs);
 };
 
@@ -161,9 +156,8 @@ json_array *dcfs_get_dirs(const char *guild_id) {
     dirs = json_array_new();
     assert(dirs);
 
-    json_array *_c = channels;
     struct dcfs_channel *channel;
-    json_array_for_each(_c, channel) {
+    json_array_for_each(channels, channel) {
       struct dcfs_dir dir;
       memset(&dir, 0, sizeof(struct dcfs_dir));
 

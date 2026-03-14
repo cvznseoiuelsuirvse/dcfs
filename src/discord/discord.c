@@ -11,8 +11,7 @@ void discord_free_message(struct dcfs_message *message) {
 }
 void discord_free_messages(json_array *messages) {
   struct dcfs_message *message;
-  json_array *_m = messages;
-  json_array_for_each(_m, message) discord_free_message(message);
+  json_array_for_each(messages, message) discord_free_message(message);
   json_array_destroy(messages);
 }
 
@@ -75,8 +74,7 @@ json_array *discord_get_messages(const char *channel_id) {
     messages_n = json_array_size(json);
 
     json_object *o;
-    json_array *_j = json;
-    json_array_for_each(_j, o) {
+    json_array_for_each(json, o) {
       json_string message_id = json_object_get(o, "id");
 
       json_object *attachment;
@@ -136,8 +134,7 @@ json_array *discord_get_channels(const char *guild_id) {
   }
 
   json_object *o;
-  json_array *_j = json;
-  json_array_for_each(_j, o) {
+  json_array_for_each(json, o) {
     json_string id = json_object_get(o, "id");
     json_string name = json_object_get(o, "name");
     json_number *type = json_object_get(o, "type");

@@ -365,12 +365,14 @@ int dcfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *_)
     stbuf->uid = dir->uid;
     stbuf->ctimespec.tv_sec = dir->ctime;
     stbuf->mtimespec.tv_sec = dir->ctime;
+    stbuf->atimespec.tv_sec = dir->ctime;
 #else
     stbuf->st_mode = dir->mode;
     stbuf->st_gid = dir->gid;
     stbuf->st_uid = dir->uid;
     stbuf->st_ctim.tv_sec = dir->ctime;
     stbuf->st_mtim.tv_sec = dir->ctime;
+    stbuf->st_atim.tv_sec = dir->ctime;
 #endif /* __APPLE__ */
 
   } else if (count_char(path, '/') == 2) {
@@ -386,6 +388,7 @@ int dcfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *_)
     stbuf->size = file->size;
     stbuf->ctimespec.tv_sec = file->ctime;
     stbuf->mtimespec.tv_sec = file->ctime;
+    stbuf->atimespec.tv_sec = file->ctime;
 #else
     stbuf->st_mode = file->mode;
     stbuf->st_gid = file->gid;
@@ -393,6 +396,7 @@ int dcfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *_)
     stbuf->st_size = file->size;
     stbuf->st_ctim.tv_sec = file->ctime;
     stbuf->st_mtim.tv_sec = file->ctime;
+    stbuf->st_atim.tv_sec = file->ctime;
 #endif /* __APPLE__ */
   }
 

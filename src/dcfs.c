@@ -55,47 +55,6 @@ static inline struct dcfs_file *get_file(json_array *messages,
   return NULL;
 }
 
-static void print_err(const char *format, ...) {
-  va_list list;
-  va_start(list, format);
-
-  fprintf(stderr, "%s: \033[31;1mERR\033[0m ", program_name);
-  vfprintf(stderr, format, list);
-
-  va_end(list);
-}
-
-DCFS_UNUSED static void print_inf(const char *format, ...) {
-  va_list list;
-  va_start(list, format);
-
-  printf("%s \033[34;1mINFO\033[0m ", program_name);
-  vprintf(format, list);
-
-  va_end(list);
-}
-
-static void print_warn(const char *format, ...) {
-  va_list list;
-  va_start(list, format);
-
-  printf("%s \033[33;1mWARN\033[0m ", program_name);
-  vprintf(format, list);
-
-  va_end(list);
-}
-
-static void print_op(const char *op, struct dcfs_path *path) {
-  if (!*path->dir && !*path->filename) {
-    printf("\033[35;1mOPERATION \033[37m%s\033[0m: /\n", op);
-  } else if (!*path->filename) {
-    printf("\033[35;1mOPERATION \033[37m%s\033[0m: /%s\n", op, path->dir);
-  } else {
-    printf("\033[35;1mOPERATION \033[37m%s\033[0m: /%s/%s\n", op, path->dir,
-           path->filename);
-  }
-}
-
 static int process_files(struct dcfs_dir *dir, struct dcfs_file *dcfs_file,
                          struct file *files, size_t files_n) {
   struct response resp = {0};

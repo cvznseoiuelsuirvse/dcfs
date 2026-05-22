@@ -98,31 +98,29 @@ json_array *dcfs_get_files(const char *channel_id) {
         regmatch_t m_part = part_regex.matches[2];
         size_t part_n = strtol(message->filename + m_part.rm_so, NULL, 10);
 
+
         if (part_n >= DISCORD_MAX_PARTS) {
           discord_free_messages(messages);
           return NULL;
         }
 
-        size_t filename_size = m_filename.rm_eo - m_filename.rm_so;
-        char filename[filename_size + 1];
-        snprintf(filename, filename_size, "%s",
-                 message->filename + m_filename.rm_so);
-        // memcpy(filename, message->filename + m_filename.rm_so,
-        // filename_size); filename[filename_size] = 0;
+        size_t filename_size = m_filename.rm_eo - m_filename.rm_so + 1;
+        char part_filename[filename_size + 1];
+        snprintf(part_filename, filename_size, "%s", message->filename + m_filename.rm_so);
 
-        struct dcfs_file *file;
-        json_array_for_each(files, file) {
-          if (strcmp(file->filename, filename) == 0) {
+        struct dcfs_file *parent_file;
+        json_array_for_each(files, parent_file) {
+          if (strcmp(parent_file->filename, part_filename) == 0) {
             struct dcfs_message *part = calloc(1, sizeof(struct dcfs_message));
             assert(part);
 
             part->size = message->size;
             part->url = message->url;
-            snprintf(part->filename, sizeof(part->filename), "%s",
-                     message->filename);
+            snprintf(part->filename, sizeof(part->filename), "%s", message->filename);
 
-            file->messages_n++;
-            file->messages[part_n] = part;
+            parent_file->size += message->size;
+            parent_file->messages_n++;
+            parent_file->messages[part_n] = part;
             break;
           };
         }

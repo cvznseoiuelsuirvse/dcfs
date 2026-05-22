@@ -20,4 +20,9 @@ int last_index(const char *string, char c);
 dcfs_hash string_hash(const char *string);
 void string_normalize(char *out, const char *in, size_t out_len);
 
+void print_err(const char *format, ...);
+void print_inf(const char *format, ...);
+void print_warn(const char *format, ...);
+void print_op(const char *op, struct dcfs_path *path);
+
 #endif

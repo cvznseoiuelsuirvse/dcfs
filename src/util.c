@@ -157,3 +157,44 @@ void string_normalize(char *out, const char *in, size_t out_len) {
   memcpy(out, in, out_len);
 #endif
 }
+
+void print_err(const char *format, ...) {
+  va_list list;
+  va_start(list, format);
+
+  fprintf(stderr, "\033[31;1mERR\033[0m ");
+  vfprintf(stderr, format, list);
+
+  va_end(list);
+}
+
+void print_inf(const char *format, ...) {
+  va_list list;
+  va_start(list, format);
+
+  printf("\033[34;1mINFO\033[0m ");
+  vprintf(format, list);
+
+  va_end(list);
+}
+
+void print_warn(const char *format, ...) {
+  va_list list;
+  va_start(list, format);
+
+  printf("\033[33;1mWARN\033[0m ");
+  vprintf(format, list);
+
+  va_end(list);
+}
+
+void print_op(const char *op, struct dcfs_path *path) {
+  if (!*path->dir && !*path->filename) {
+    printf("\033[35;1mOPERATION \033[37m%s\033[0m: /\n", op);
+  } else if (!*path->filename) {
+    printf("\033[35;1mOPERATION \033[37m%s\033[0m: /%s\n", op, path->dir);
+  } else {
+    printf("\033[35;1mOPERATION \033[37m%s\033[0m: /%s/%s\n", op, path->dir,
+           path->filename);
+  }
+}
